@@ -33,8 +33,8 @@ export function setupToolBlocker(
   const locale = resolveLocale(config)
 
   api.on('before_tool_call', (event: any) => {
-    const tool: string = event.tool || ''
-    const args: Record<string, any> = event.arguments || {}
+    const tool: string = event.toolName || ''
+    const args: Record<string, any> = event.params || {}
 
     // 1. Always-blocked tools
     if (BLOCKED_TOOLS.has(tool)) {

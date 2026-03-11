@@ -43,12 +43,12 @@ export function setupInputAuditor(
 
   // Hook 1: Check tool call arguments for injection
   api.on('before_tool_call', (event: any) => {
-    const args: Record<string, any> = event.arguments || {}
+    const args: Record<string, any> = event.params || {}
     const texts = extractTexts(args)
     if (texts.length === 0) return
 
     const fullText = texts.join('\n')
-    return checkInjection(fullText, event.tool, locale, compiled, config, log, enforce)
+    return checkInjection(fullText, event.toolName, locale, compiled, config, log, enforce)
   }, { name: 'clawguard.input-auditor', priority: 300 })
 
   // Hook 2: Audit inbound messages

@@ -47,7 +47,7 @@ export function setupPromptGuard(
       action: 'inject',
       detail: 'Security prompt injected',
     })
-    return { prependSystemContext: prompt }
+    return { prependContext: prompt }
   }, { name: 'clawguard.prompt-guard', priority: 100 })
 
   api.logger.info('[ClawGuard] L1 Prompt Guard enabled')
