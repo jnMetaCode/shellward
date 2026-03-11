@@ -1,0 +1,36 @@
+{
+  "name": "clawguard",
+  "version": "0.1.0",
+  "description": "First bilingual (EN/ZH) security plugin for OpenClaw — injection detection, dangerous operation blocking, PII/secret redaction, audit logging",
+  "keywords": [
+    "openclaw",
+    "security",
+    "plugin",
+    "injection-detection",
+    "pii-redaction",
+    "chinese",
+    "bilingual"
+  ],
+  "author": "jnMetaCode",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnMetaCode/clawguard"
+  },
+  "type": "module",
+  "main": "src/index.ts",
+  "openclaw": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src/",
+    "openclaw.plugin.json",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

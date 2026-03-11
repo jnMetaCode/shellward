@@ -1,0 +1,43 @@
+{
+  "id": "clawguard",
+  "name": "ClawGuard",
+  "description": "First bilingual (EN/ZH) security plugin for OpenClaw — injection detection, dangerous operation blocking, PII/secret redaction (incl. Chinese ID card, phone, bank card), audit logging",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": ["enforce", "audit"],
+        "default": "enforce",
+        "description": "enforce = block + log, audit = log only"
+      },
+      "locale": {
+        "type": "string",
+        "enum": ["auto", "zh", "en"],
+        "default": "auto",
+        "description": "auto = detect from system language"
+      },
+      "layers": {
+        "type": "object",
+        "properties": {
+          "promptGuard":   { "type": "boolean", "default": true },
+          "outputScanner": { "type": "boolean", "default": true },
+          "toolBlocker":   { "type": "boolean", "default": true },
+          "inputAuditor":  { "type": "boolean", "default": true },
+          "securityGate":  { "type": "boolean", "default": true }
+        }
+      },
+      "injectionThreshold": {
+        "type": "number",
+        "default": 60,
+        "description": "Injection risk score threshold (0-100) to trigger block/alert"
+      }
+    }
+  },
+  "uiHints": {
+    "mode": { "label": "Security Mode", "help": "enforce blocks dangerous operations; audit only logs them" },
+    "locale": { "label": "Language", "help": "auto detects from system LANG; zh for Chinese; en for English" }
+  }
+}
