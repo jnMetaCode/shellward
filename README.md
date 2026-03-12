@@ -38,13 +38,26 @@ ClawGuard protects your OpenClaw agent with 8 defense layers:
 
 ### Install
 
+**One-click install (recommended):**
+
+```bash
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/jnMetaCode/clawguard/main/install.sh | bash
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/jnMetaCode/clawguard/main/install.ps1 | iex
+```
+
+**Or install manually:**
+
 ```bash
 openclaw plugins install clawguard
 ```
 
-Or install from npm:
-
 ```bash
+# Or via npm
 npm install clawguard
 openclaw plugins install ./node_modules/clawguard
 ```
@@ -222,6 +235,20 @@ ClawGuard 通过 8 层防御保护你的 OpenClaw 智能体：
 - **JSONL 审计日志** — 零依赖、支持 grep/jq 查询、100MB 自动轮转
 
 ### 安装
+
+**一键安装（推荐）：**
+
+```bash
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/jnMetaCode/clawguard/main/install.sh | bash
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/jnMetaCode/clawguard/main/install.ps1 | iex
+```
+
+**手动安装：**
 
 ```bash
 openclaw plugins install clawguard

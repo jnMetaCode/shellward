@@ -28,6 +28,8 @@
     "src/",
     "skills/",
     "openclaw.plugin.json",
+    "install.sh",
+    "install.ps1",
     "LICENSE",
     "README.md"
   ],
