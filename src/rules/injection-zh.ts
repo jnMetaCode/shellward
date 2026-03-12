@@ -13,7 +13,7 @@ export const INJECTION_RULES_ZH: InjectionRule[] = [
   {
     id: 'zh_new_role',
     name: '角色扮演攻击',
-    pattern: '(?:你现在是|你的新身份是|从现在起你是|假装你是|扮演|你是一个)(?:.*?)(?:助手|AI|机器人|黑客|专家)',
+    pattern: '(?:你现在是|你的新身份是|从现在起你是|假装你是|请?扮演|你是一个|充当)(?:.*?)(?:助手|AI|机器人|黑客|专家|没有限制)',
     riskScore: 35,
     category: 'role_hijack',
   },
@@ -34,7 +34,7 @@ export const INJECTION_RULES_ZH: InjectionRule[] = [
   {
     id: 'zh_no_restriction',
     name: '解除限制',
-    pattern: '(?:取消|移除|去掉|关闭|忽略|跳过|绕过)(?:所有|一切|你的)?(?:限制|约束|安全|过滤|审查|规则)',
+    pattern: '(?:取消|移除|去掉|关闭|忽略|跳过|绕过|忘记|丢弃)(?:之前|所有|一切|你的|以上|前面)*(?:的)?(?:限制|约束|安全|过滤|审查|规则|指令|设定)',
     riskScore: 40,
     category: 'override',
   },
@@ -95,5 +95,13 @@ export const INJECTION_RULES_ZH: InjectionRule[] = [
     flags: 'i',
     riskScore: 30,
     category: 'injection',
+  },
+  {
+    id: 'zh_mixed_lang_injection',
+    name: '中英混合注入',
+    pattern: '(?:please|pls|now)?\\s*(?:ignore|forget|disregard)\\s+.*(?:指令|规则|之前|以上)|(?:忽略|忘记|跳过).*(?:instruction|rule|prompt|previous)',
+    flags: 'i',
+    riskScore: 40,
+    category: 'override',
   },
 ]

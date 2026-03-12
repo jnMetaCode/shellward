@@ -1,0 +1,137 @@
+{
+  "version": 2,
+  "lastUpdated": "2026-03-12T00:00:00Z",
+  "source": "ShellWard Security Team — aggregated from NVD, GitHub Advisories, security research",
+  "vulnerabilities": [
+    {
+      "affectedBelow": "1.0.111",
+      "severity": "HIGH",
+      "id": "CVE-2025-59536",
+      "ghsa": "GHSA-ph6w-f82w-28w6",
+      "description_zh": "远程代码执行：恶意仓库通过 Hooks 和 MCP Server 在信任提示前执行任意命令 (CVSS 8.7)",
+      "description_en": "RCE via Hooks and MCP Server bypass — arbitrary shell execution before trust dialog (CVSS 8.7)"
+    },
+    {
+      "affectedBelow": "2.0.65",
+      "severity": "MEDIUM",
+      "id": "CVE-2026-21852",
+      "ghsa": "GHSA-jh7p-qr78-84p7",
+      "description_zh": "API 密钥泄露：恶意仓库通过 settings.json 设置 ANTHROPIC_BASE_URL 窃取用户 API Key (CVSS 5.3)",
+      "description_en": "API key exfiltration via ANTHROPIC_BASE_URL in settings.json before trust prompt (CVSS 5.3)"
+    },
+    {
+      "affectedBelow": "2026.2.7",
+      "severity": "HIGH",
+      "id": "GHSA-66q4-vfjg-2qhh",
+      "description_zh": "命令注入：通过目录切换绕过文件写入保护",
+      "description_en": "Command injection via directory change bypasses write protection"
+    },
+    {
+      "affectedBelow": "2026.2.7",
+      "severity": "HIGH",
+      "id": "GHSA-mhg7-666j-cqg4",
+      "description_zh": "命令注入：通过管道 sed 命令绕过文件写入限制",
+      "description_en": "Command injection via piped sed command bypasses file write restrictions"
+    },
+    {
+      "affectedBelow": "2026.2.7",
+      "severity": "HIGH",
+      "id": "GHSA-ff64-7w26-62rf",
+      "description_zh": "沙箱逃逸：通过 settings.json 持久化配置注入",
+      "description_en": "Sandbox escape via persistent configuration injection in settings.json"
+    },
+    {
+      "affectedBelow": "2026.2.4",
+      "severity": "HIGH",
+      "id": "GHSA-qgqw-h4xq-7w8w",
+      "description_zh": "命令注入：find 命令绕过用户审批提示",
+      "description_en": "Command injection in find command bypasses user approval prompt"
+    },
+    {
+      "affectedBelow": "2026.2.4",
+      "severity": "HIGH",
+      "id": "GHSA-q728-gf8j-w49r",
+      "description_zh": "路径绕过：通过 ZSH clobber 实现任意文件写入",
+      "description_en": "Path restriction bypass via ZSH clobber allows arbitrary file writes"
+    },
+    {
+      "affectedBelow": "2026.2.4",
+      "severity": "HIGH",
+      "id": "GHSA-vhw5-3g5m-8ggf",
+      "description_zh": "域名验证绕过：自动向攻击者控制的域名发送请求",
+      "description_en": "Domain validation bypass allows automatic requests to attacker-controlled domains"
+    },
+    {
+      "affectedBelow": "1.0.131",
+      "severity": "HIGH",
+      "id": "GHSA-xq4m-mc3c-vvg3",
+      "description_zh": "命令验证绕过：允许执行任意代码",
+      "description_en": "Command validation bypass allows arbitrary code execution"
+    },
+    {
+      "affectedBelow": "1.0.120",
+      "severity": "HIGH",
+      "id": "GHSA-5hhx-v7f6-x7gv",
+      "description_zh": "信任提示前执行命令：启动时即执行恶意代码",
+      "description_en": "Command execution prior to startup trust dialog"
+    },
+    {
+      "affectedBelow": "1.0.120",
+      "severity": "HIGH",
+      "id": "GHSA-7mv8-j34q-vp7q",
+      "description_zh": "sed 命令验证绕过：实现任意文件写入",
+      "description_en": "Sed command validation bypass allows arbitrary file writes"
+    },
+    {
+      "affectedBelow": "1.0.111",
+      "severity": "HIGH",
+      "id": "GHSA-2jjv-qf24-vfm4",
+      "description_zh": "特定 Yarn 版本下插件自动加载导致任意代码执行",
+      "description_en": "Arbitrary code execution via plugin autoloading with specific Yarn versions"
+    },
+    {
+      "affectedBelow": "1.0.102",
+      "severity": "HIGH",
+      "id": "GHSA-j4h9-wv2m-wrf7",
+      "description_zh": "恶意 git email 配置导致任意代码执行",
+      "description_en": "Arbitrary code execution caused by maliciously configured git email"
+    },
+    {
+      "affectedBelow": "1.0.102",
+      "severity": "HIGH",
+      "id": "GHSA-qxfv-fcpc-w36x",
+      "description_zh": "rg 命令注入绕过用户审批提示",
+      "description_en": "Command injection in rg command bypassed user approval prompt"
+    },
+    {
+      "affectedBelow": "1.0.87",
+      "severity": "HIGH",
+      "id": "GHSA-x5gv-jw7f-j6xj",
+      "description_zh": "默认允许列表过于宽松：未授权文件读取和网络外泄",
+      "description_en": "Permissive default allowlist enables unauthorized file read and network exfiltration"
+    },
+    {
+      "affectedBelow": "1.0.82",
+      "severity": "HIGH",
+      "id": "GHSA-x56v-x2h6-7j34",
+      "description_zh": "echo 命令注入绕过用户审批提示",
+      "description_en": "Command injection in echo command bypassed user approval prompt"
+    },
+    {
+      "affectedBelow": "1.0.3",
+      "severity": "HIGH",
+      "id": "GHSA-9f65-56v6-gxw7",
+      "description_zh": "IDE 扩展 WebSocket 接受任意来源连接",
+      "description_en": "IDE extensions allow websocket connections from arbitrary origins"
+    }
+  ],
+  "supplyChainAlerts": [
+    {
+      "id": "SW-ALERT-2026-001",
+      "severity": "HIGH",
+      "date": "2026-02-15",
+      "description_zh": "SANDWORM_MODE 供应链攻击：19 个恶意 npm 包伪装为 Claude Code 等 AI 工具，植入恶意 MCP Server 窃取 SSH 密钥和凭证",
+      "description_en": "SANDWORM_MODE supply chain attack: 19 malicious npm packages impersonating Claude Code and AI tools, deploying rogue MCP servers to exfiltrate SSH keys and credentials"
+    }
+  ]
+}

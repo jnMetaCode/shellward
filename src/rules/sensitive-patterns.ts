@@ -59,7 +59,7 @@ export const SENSITIVE_PATTERNS: SensitivePattern[] = [
   {
     id: 'password',
     name: 'Password',
-    regex: /(?:password|passwd|pwd)\s*[=:]\s*['"]?\S{6,}['"]?/gi,
+    regex: /(?:password|passwd|pwd)\s*[=:]\s*['"]?\S{6,100}['"]?/gi,
     replacement: '[REDACTED:Password]',
   },
   {
@@ -95,7 +95,7 @@ export const SENSITIVE_PATTERNS: SensitivePattern[] = [
   {
     id: 'email',
     name: 'Email Address',
-    regex: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
+    regex: /[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,255}\.[A-Za-z]{2,10}/g,
     replacement: '[REDACTED:Email]',
   },
   {

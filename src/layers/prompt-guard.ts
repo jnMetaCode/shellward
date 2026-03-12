@@ -48,7 +48,7 @@ export function setupPromptGuard(
   const locale = resolveLocale(config)
 
   // Generate canary token for system prompt exfiltration detection
-  canaryToken = 'CG-' + randomBytes(8).toString('hex')
+  canaryToken = 'SW-' + randomBytes(8).toString('hex')
 
   const basePrompt = locale === 'zh' ? SECURITY_PROMPT_ZH : SECURITY_PROMPT_EN
   const canaryRule = locale === 'zh'

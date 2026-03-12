@@ -30,7 +30,7 @@ ShellWard protects your OpenClaw agent with 8 defense layers:
 - **Bilingual** — all messages, rules, and prompts in English and Chinese
 - **Chinese PII detection** — ID card (with checksum validation), phone number, bank card (Luhn)
 - **Global PII detection** — API keys, JWT, passwords, US SSN, credit cards, emails
-- **25 injection rules** — 13 Chinese + 12 English patterns with risk scoring
+- **26 injection rules** — 14 Chinese + 12 English patterns with risk scoring
 - **15 dangerous command rules** — fork bombs, reverse shells, disk formatting, etc. (all case-insensitive)
 - **12 protected path rules** — .env, .ssh, private keys, cloud credentials
 - **Dual mode** — `enforce` (block + log) or `audit` (log only)
@@ -230,7 +230,7 @@ ShellWard 通过 8 层防御保护你的 OpenClaw 智能体：
 - **中英双语** — 所有消息、规则、提示均支持中英文
 - **中国 PII 检测** — 身份证号（含校验位验证）、手机号、银行卡号（Luhn 校验）
 - **国际 PII 检测** — API Key、JWT、密码、美国 SSN、信用卡、邮箱
-- **25 条注入规则** — 13 条中文 + 12 条英文，带风险评分
+- **26 条注入规则** — 14 条中文 + 12 条英文，带风险评分
 - **双模式** — `enforce`（拦截+记录）或 `audit`（仅记录）
 - **JSONL 审计日志** — 零依赖、支持 grep/jq 查询、100MB 自动轮转
 

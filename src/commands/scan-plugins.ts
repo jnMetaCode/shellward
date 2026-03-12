@@ -113,9 +113,9 @@ export function registerScanPluginsCommand(api: any, config: ShellWardConfig) {
           try {
             const content = readFileSync(file, 'utf-8')
             for (const rule of SUSPICIOUS_PATTERNS) {
-              if (rule.pattern.test(content)) {
-                // Reset lastIndex for global regexes
-                rule.pattern.lastIndex = 0
+              // Use fresh regex to avoid lastIndex state issues with global patterns
+              const regex = new RegExp(rule.pattern.source, rule.pattern.flags)
+              if (regex.test(content)) {
                 const relPath = file.replace(plugin.path + '/', '')
                 risks.push(zh
                   ? `⚠️ ${relPath}: ${rule.name} (${rule.risk})`

@@ -37,8 +37,8 @@ export function setupDataFlowGuard(
 
   // === Part 1: Track sensitive file reads via after_tool_call ===
   api.on('after_tool_call', (event: any) => {
-    const toolName = (event.toolName || '').toLowerCase()
-    const params = event.params || {}
+    const toolName = String(event.toolName || '').toLowerCase()
+    const params = (event.params && typeof event.params === 'object') ? event.params : {}
     const path = String(params.path || params.file_path || params.filename || '')
 
     if (!READ_TOOLS.has(toolName) || !path) return
@@ -79,8 +79,8 @@ export function setupDataFlowGuard(
 
   // === Part 2: Block network tool calls if sensitive data was recently read ===
   api.on('before_tool_call', (event: any) => {
-    const toolName = (event.toolName || '').toLowerCase()
-    const params = event.params || {}
+    const toolName = String(event.toolName || '').toLowerCase()
+    const params = (event.params && typeof event.params === 'object') ? event.params : {}
 
     // 2a. Block network tools if sensitive files were recently read
     if (NETWORK_TOOLS.has(toolName) && sensitiveReads.size > 0) {

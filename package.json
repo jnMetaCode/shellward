@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "First bilingual (EN/ZH) security plugin for OpenClaw — Chinese PII detection (ID card/phone/bank card), prompt injection detection (13 ZH + 12 EN rules), dangerous command blocking, audit logging. Zero dependencies.",
   "keywords": [
     "shellward",
@@ -31,6 +31,7 @@
     "src/",
     "skills/",
     "openclaw.plugin.json",
+    "vuln-db.json",
     "install.sh",
     "install.ps1",
     "LICENSE",

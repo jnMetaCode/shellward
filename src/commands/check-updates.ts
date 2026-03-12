@@ -1,34 +1,35 @@
-// src/commands/check-updates.ts — /check-updates: check OpenClaw version and known vulnerabilities
+// src/commands/check-updates.ts — /check-updates: check versions + remote vulnerability DB
 
 import { execSync } from 'child_process'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import type { ShellWardConfig } from '../types'
 import { resolveLocale } from '../types'
+import { checkForUpdate, fetchVulnDB, compareVersions } from '../update-check'
 
-// Known vulnerability database (hardcoded, updated with plugin releases)
-// Format: { version_range, severity, cve, description_zh, description_en }
-const KNOWN_VULNS = [
+// Local fallback vulnerability database (used when remote fetch fails)
+// Contains only CVE-assigned vulnerabilities as minimum baseline
+const LOCAL_VULNS = [
   {
-    affectedBelow: '2026.3.6',
-    severity: 'HIGH',
-    id: 'CG-2026-001',
-    description_zh: 'tool_result_persist hook 可被绕过泄露敏感数据',
-    description_en: 'tool_result_persist hook bypass may leak sensitive data',
+    affectedBelow: '1.0.111',
+    severity: 'HIGH' as const,
+    id: 'CVE-2025-59536',
+    description_zh: '远程代码执行：恶意仓库通过 Hooks 和 MCP Server 在信任提示前执行任意命令 (CVSS 8.7)',
+    description_en: 'RCE via Hooks and MCP Server bypass — arbitrary shell execution before trust dialog (CVSS 8.7)',
   },
   {
-    affectedBelow: '2026.3.4',
-    severity: 'CRITICAL',
-    id: 'CG-2026-002',
-    description_zh: '插件系统缺少签名验证，可加载恶意插件',
-    description_en: 'Plugin system lacks signature verification, allows malicious plugins',
+    affectedBelow: '2.0.65',
+    severity: 'MEDIUM' as const,
+    id: 'CVE-2026-21852',
+    description_zh: 'API 密钥泄露：恶意仓库通过 settings.json 设置 ANTHROPIC_BASE_URL 窃取用户 API Key (CVSS 5.3)',
+    description_en: 'API key exfiltration via ANTHROPIC_BASE_URL in settings.json before trust prompt (CVSS 5.3)',
   },
   {
-    affectedBelow: '2026.3.2',
-    severity: 'HIGH',
-    id: 'CG-2026-003',
-    description_zh: 'Gateway 默认绑定 0.0.0.0，未认证即可远程执行',
-    description_en: 'Gateway binds 0.0.0.0 by default, allows unauthenticated remote execution',
+    affectedBelow: '2026.2.7',
+    severity: 'HIGH' as const,
+    id: 'GHSA-ff64-7w26-62rf',
+    description_zh: '沙箱逃逸：通过 settings.json 持久化配置注入',
+    description_en: 'Sandbox escape via persistent configuration injection in settings.json',
   },
 ]
 
@@ -38,10 +39,10 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
   api.registerCommand({
     name: 'check-updates',
     description: locale === 'zh'
-      ? '🔄 检查 OpenClaw 版本和已知漏洞'
-      : '🔄 Check OpenClaw version and known vulnerabilities',
+      ? '🔄 检查版本更新和已知漏洞（支持远程漏洞库）'
+      : '🔄 Check for updates and known vulnerabilities (remote vuln DB)',
     acceptsArgs: false,
-    handler: () => {
+    handler: async () => {
       const zh = locale === 'zh'
       const lines: string[] = []
 
@@ -49,20 +50,19 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
       lines.push('')
 
       // 1. Get OpenClaw version
-      let currentVersion = 'unknown'
+      let openclawVersion = 'unknown'
       try {
         const out = execSync('openclaw --version 2>&1', { timeout: 5000 }).toString().trim()
-        // Extract version like "2026.3.8"
         const match = out.match(/(\d{4}\.\d+\.\d+)/)
-        if (match) currentVersion = match[1]
+        if (match) openclawVersion = match[1]
       } catch { /* skip */ }
 
       lines.push(zh
-        ? `### OpenClaw 版本: ${currentVersion}`
-        : `### OpenClaw Version: ${currentVersion}`)
+        ? `### OpenClaw 版本: ${openclawVersion}`
+        : `### OpenClaw Version: ${openclawVersion}`)
       lines.push('')
 
-      // 2. Check ShellWard version
+      // 2. Check ShellWard version + available update
       let shellwardVersion = 'unknown'
       try {
         const pkgPath = join(__dirname, '../../package.json')
@@ -75,17 +75,45 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
       lines.push(zh
         ? `### ShellWard 版本: ${shellwardVersion}`
         : `### ShellWard Version: ${shellwardVersion}`)
+
+      // Check for ShellWard update from npm
+      try {
+        const updateInfo = await checkForUpdate(shellwardVersion)
+        if (updateInfo?.updateAvailable) {
+          lines.push(zh
+            ? `  🆕 **新版本 v${updateInfo.latest} 可用！** 运行 \`openclaw plugins update shellward\` 更新`
+            : `  🆕 **v${updateInfo.latest} available!** Run \`openclaw plugins update shellward\` to update`)
+        } else if (updateInfo) {
+          lines.push(zh ? '  ✅ 已是最新版本' : '  ✅ Up to date')
+        }
+      } catch { /* skip */ }
       lines.push('')
 
-      // 3. Check known vulnerabilities
+      // 3. Check known vulnerabilities (remote DB with local fallback)
       lines.push(zh ? '### 已知漏洞检查' : '### Known Vulnerability Check')
 
-      if (currentVersion === 'unknown') {
+      let vulnDB = LOCAL_VULNS
+      let alerts: { id: string; severity: string; date: string; description_zh: string; description_en: string }[] = []
+      let dbSource = 'local'
+      try {
+        const remote = await fetchVulnDB()
+        if (remote.vulns.length > 0) {
+          vulnDB = remote.vulns
+          dbSource = 'remote'
+        }
+        alerts = remote.alerts || []
+      } catch { /* use local */ }
+
+      lines.push(zh
+        ? `  数据源: ${dbSource === 'remote' ? `远程漏洞库 (GitHub) — ${vulnDB.length} 条记录` : '本地内置数据库'}`
+        : `  Source: ${dbSource === 'remote' ? `Remote vuln DB (GitHub) — ${vulnDB.length} entries` : 'Local built-in database'}`)
+
+      if (openclawVersion === 'unknown') {
         lines.push(zh
           ? '  ⚠️ 无法确定 OpenClaw 版本，请手动检查'
           : '  ⚠️ Cannot determine OpenClaw version, please check manually')
       } else {
-        const affected = KNOWN_VULNS.filter(v => compareVersions(currentVersion, v.affectedBelow) < 0)
+        const affected = vulnDB.filter(v => compareVersions(openclawVersion, v.affectedBelow) < 0)
         if (affected.length === 0) {
           lines.push(zh
             ? '  ✅ 当前版本未发现已知漏洞'
@@ -96,9 +124,20 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
             const desc = zh ? vuln.description_zh : vuln.description_en
             lines.push(`  ${icon} **${vuln.id}** [${vuln.severity}]: ${desc}`)
             lines.push(zh
-              ? `     影响版本: < ${vuln.affectedBelow} — 请升级 OpenClaw`
-              : `     Affected: < ${vuln.affectedBelow} — please upgrade OpenClaw`)
+              ? `     影响版本: < ${vuln.affectedBelow} — 请升级`
+              : `     Affected: < ${vuln.affectedBelow} — please upgrade`)
           }
+        }
+      }
+
+      // Supply chain alerts
+      if (alerts.length > 0) {
+        lines.push('')
+        lines.push(zh ? '### 供应链安全警告' : '### Supply Chain Alerts')
+        for (const alert of alerts) {
+          const icon = alert.severity === 'CRITICAL' ? '🔴' : '🟡'
+          const desc = zh ? alert.description_zh : alert.description_en
+          lines.push(`  ${icon} **${alert.id}** [${alert.date}]: ${desc}`)
         }
       }
       lines.push('')
@@ -134,18 +173,4 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
       return { text: lines.join('\n') }
     },
   })
-}
-
-/**
- * Compare two version strings like "2026.3.8" vs "2026.3.6"
- * Returns: negative if a < b, 0 if equal, positive if a > b
- */
-function compareVersions(a: string, b: string): number {
-  const pa = a.split('.').map(Number)
-  const pb = b.split('.').map(Number)
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] || 0) - (pb[i] || 0)
-    if (diff !== 0) return diff
-  }
-  return 0
 }

@@ -34,9 +34,9 @@ export function setupToolBlocker(
   const locale = resolveLocale(config)
 
   api.on('before_tool_call', (event: any) => {
-    const tool: string = event.toolName || ''
+    const tool: string = String(event.toolName || '')
     const toolLower = tool.toLowerCase()
-    const args: Record<string, any> = event.params || {}
+    const args: Record<string, any> = (event.params && typeof event.params === 'object') ? event.params : {}
 
     // 1. Always-blocked tools (case-insensitive)
     if (BLOCKED_TOOLS.has(toolLower)) {

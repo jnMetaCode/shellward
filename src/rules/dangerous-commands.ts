@@ -71,7 +71,7 @@ export const DANGEROUS_COMMANDS: DangerousCommandRule[] = [
   },
   {
     id: 'fork_bomb',
-    pattern: /:\(\)\s*\{\s*:\|:&\s*\}\s*;|\.\/[a-z]+\s*&\s*\.\/[a-z]+/i,
+    pattern: /:\(\)\s*\{\s*:\|:&\s*\}\s*;?|\.\/[a-z]+\s*&\s*\.\/[a-z]+/i,
     description_zh: 'Fork 炸弹（耗尽系统资源）',
     description_en: 'Fork bomb (exhaust system resources)',
   },

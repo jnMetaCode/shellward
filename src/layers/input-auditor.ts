@@ -43,7 +43,7 @@ export function setupInputAuditor(
 
   // Hook 1: Check tool call arguments for injection
   api.on('before_tool_call', (event: any) => {
-    const args: Record<string, any> = event.params || {}
+    const args: Record<string, any> = (event.params && typeof event.params === 'object') ? event.params : {}
     const texts = extractTexts(args)
     if (texts.length === 0) return
 

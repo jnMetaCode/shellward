@@ -21,8 +21,8 @@ export type ResolvedLocale = 'zh' | 'en'
 export interface AuditEntry {
   ts: string
   level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO'
-  layer: 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8'
-  action: 'block' | 'redact' | 'detect' | 'allow' | 'inject'
+  layer: 'L0' | 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8'
+  action: 'block' | 'redact' | 'detect' | 'allow' | 'inject' | 'error'
   detail: string
   tool?: string
   pattern?: string
@@ -88,6 +88,6 @@ export function resolveLocale(config: ShellWardConfig): ResolvedLocale {
   if (config.locale === 'zh') return 'zh'
   if (config.locale === 'en') return 'en'
   // auto detection
-  const lang = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || ''
-  return /zh/i.test(lang) ? 'zh' : 'en'
+  const lang = process.env.LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANGUAGE || ''
+  return /\bzh[_-]|chinese/i.test(lang) ? 'zh' : 'en'
 }
