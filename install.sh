@@ -131,25 +131,32 @@ fi
 
 mkdir -p "${HOME}/.openclaw/plugins"
 
+clone_install() {
+  echo -e "${BLUE}$MSG_CLONE${NC}"
+  git clone --depth 1 https://github.com/jnMetaCode/clawguard.git "$PLUGIN_DIR" 2>/dev/null
+  rm -rf "$PLUGIN_DIR/.git"
+}
+
 if [ "$INSTALL_METHOD" = "1" ]; then
   echo -e "${BLUE}$MSG_NPM${NC}"
   cd /tmp
   rm -rf clawguard-npm-install
   mkdir clawguard-npm-install && cd clawguard-npm-install
-  npm pack clawguard 2>/dev/null && {
+  if npm pack clawguard 2>/dev/null; then
     tar xzf clawguard-*.tgz
     mv package "$PLUGIN_DIR"
-  } || {
-    # Fallback to git clone if npm not published yet
-    echo -e "${BLUE}$MSG_CLONE${NC}"
-    git clone --depth 1 https://github.com/jnMetaCode/clawguard.git "$PLUGIN_DIR" 2>/dev/null
-    rm -rf "$PLUGIN_DIR/.git"
-  }
+    # Verify npm package has correct structure
+    if [ ! -f "$PLUGIN_DIR/src/index.ts" ]; then
+      echo -e "${YELLOW}npm package outdated, switching to git...${NC}"
+      rm -rf "$PLUGIN_DIR"
+      clone_install
+    fi
+  else
+    clone_install
+  fi
   cd /tmp && rm -rf clawguard-npm-install
 else
-  echo -e "${BLUE}$MSG_CLONE${NC}"
-  git clone --depth 1 https://github.com/jnMetaCode/clawguard.git "$PLUGIN_DIR" 2>/dev/null
-  rm -rf "$PLUGIN_DIR/.git"
+  clone_install
 fi
 
 # Fix ownership
