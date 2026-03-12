@@ -140,10 +140,10 @@ clone_install() {
 if [ "$INSTALL_METHOD" = "1" ]; then
   echo -e "${BLUE}$MSG_NPM${NC}"
   cd /tmp
-  rm -rf clawguard-npm-install
-  mkdir clawguard-npm-install && cd clawguard-npm-install
-  if npm pack clawguard 2>/dev/null; then
-    tar xzf clawguard-*.tgz
+  rm -rf openclaw-guard-npm-install
+  mkdir openclaw-guard-npm-install && cd openclaw-guard-npm-install
+  if npm pack openclaw-guard 2>/dev/null; then
+    tar xzf openclaw-guard-*.tgz
     mv package "$PLUGIN_DIR"
     # Verify npm package has correct structure
     if [ ! -f "$PLUGIN_DIR/src/index.ts" ]; then
@@ -154,7 +154,7 @@ if [ "$INSTALL_METHOD" = "1" ]; then
   else
     clone_install
   fi
-  cd /tmp && rm -rf clawguard-npm-install
+  cd /tmp && rm -rf openclaw-guard-npm-install
 else
   clone_install
 fi

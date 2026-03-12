@@ -1,5 +1,5 @@
 {
-  "name": "clawguard",
+  "name": "openclaw-guard",
   "version": "0.3.0",
   "description": "First bilingual (EN/ZH) security plugin for OpenClaw — injection detection, dangerous operation blocking, PII/secret redaction, audit logging",
   "keywords": [

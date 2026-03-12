@@ -58,8 +58,8 @@ openclaw plugins install clawguard
 
 ```bash
 # Or via npm
-npm install clawguard
-openclaw plugins install ./node_modules/clawguard
+npm install openclaw-guard
+openclaw plugins install ./node_modules/openclaw-guard
 ```
 
 ### Configuration
