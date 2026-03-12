@@ -13,7 +13,7 @@ If you discover a security vulnerability in ClawGuard, please report it responsi
 
 **DO NOT** open a public GitHub issue for security vulnerabilities.
 
-Instead, please email: **security@jnmetacode.dev**
+Instead, please email: **ialanhacker@gmail.com**
 
 Or use [GitHub Security Advisories](https://github.com/jnMetaCode/clawguard/security/advisories/new) to report privately.
 
