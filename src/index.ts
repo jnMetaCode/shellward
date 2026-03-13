@@ -89,10 +89,10 @@ export default {
     const locale = resolveLocale(config)
     const safe = createSafeApi(api, log)
 
-    const modeLabel = locale === 'zh'
-      ? `模式: ${config.mode}`
-      : `mode: ${config.mode}`
-    api.logger.info(`[ShellWard] Security plugin started (${modeLabel})`)
+    const startMsg = locale === 'zh'
+      ? `[ShellWard] 首个中文 OpenClaw 安全插件已启动 (v${CURRENT_VERSION}, 模式: ${config.mode})`
+      : `[ShellWard] Security plugin started (v${CURRENT_VERSION}, mode: ${config.mode})`
+    api.logger.info(startMsg)
 
     // === Defense Layers (L1-L8) ===
     // All layers use `safe` wrapper — hooks get automatic try-catch + fail-safe
@@ -147,7 +147,10 @@ export default {
     const allLayers = ['promptGuard', 'outputScanner', 'toolBlocker', 'inputAuditor', 'securityGate', 'outboundGuard', 'dataFlowGuard', 'sessionGuard']
     const enabledCount = allLayers.filter(k => (config.layers as any)[k]).length
 
-    api.logger.info(`[ShellWard] ${enabledCount} defense layers active`)
+    const layerMsg = locale === 'zh'
+      ? `[ShellWard] ${enabledCount} 层防御已激活 — 身份证/手机/银行卡脱敏 | 注入检测 | 外泄拦截`
+      : `[ShellWard] ${enabledCount} defense layers active`
+    api.logger.info(layerMsg)
 
     log.write({
       level: 'INFO',
