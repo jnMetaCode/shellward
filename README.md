@@ -13,9 +13,7 @@
 
 ### 演示
 
-https://github.com/user-attachments/assets/shellward-demo-zh.gif
-
-<!-- 演示 GIF 通过 GitHub Release 托管，避免仓库体积膨胀 -->
+![ShellWard 安全防护演示](https://github.com/jnMetaCode/shellward/releases/download/v0.4.0/demo-zh.gif)
 
 > 5 个真实攻击场景：危险命令拦截 → 中文注入检测 → 身份证/手机/银行卡自动隐藏 → 数据外泄链阻断 → 正常操作放行
 
@@ -229,9 +227,7 @@ Apache-2.0
 
 The only OpenClaw security plugin with **bilingual (EN/ZH) support** — Chinese PII detection (ID card with checksum, phone, bank card with Luhn), 8 defense layers, 26 injection rules, zero dependencies.
 
-https://github.com/user-attachments/assets/shellward-demo-en.gif
-
-<!-- Demo GIF hosted via GitHub Release to keep repo lean -->
+![ShellWard Security Demo](https://github.com/jnMetaCode/shellward/releases/download/v0.4.0/demo-openclaw.gif)
 
 ### Features
 
