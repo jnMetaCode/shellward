@@ -27,3 +27,15 @@ package-lock.json
 
 # Temp
 /tmp/
+
+# Demo recordings (too large for git)
+*.cast
+*.gif
+demo-openclaw.gif
+shellward-demo*.cast
+
+# Promotion drafts
+promo/
+
+# External repos
+awesome-llm-security/
