@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "AI Agent Security Middleware | 身份证/手机号/银行卡 PII 审计 | 中文注入检测 | 8层防御 | SDK + OpenClaw — Security layer for AI agents: prompt injection, data leak detection, tool control. Chinese PII audit, 8 defense layers. Zero dependencies.",
   "keywords": [
     "shellward",
