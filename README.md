@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="ShellWard Logo" width="160" />
+</p>
+
 # ShellWard
 
 **AI Agent Security Middleware** — Protect AI agents from prompt injection, data exfiltration, and dangerous command execution. ShellWard acts as an LLM security middleware and AI agent firewall, intercepting tool calls at runtime to enforce agent guardrails before damage is done.
