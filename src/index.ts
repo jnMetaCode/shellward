@@ -20,7 +20,7 @@ import { registerAllCommands } from './commands/index'
 import { checkForUpdate } from './update-check'
 import { runAutoCheckOnStartup } from './auto-check'
 
-const CURRENT_VERSION = '0.5.9'
+const CURRENT_VERSION = '0.5.10'
 
 // Re-export core engine for SDK usage
 export { ShellWard } from './core/engine'

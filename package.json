@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "AI agent security & MCP security middleware — prompt injection detection, AI firewall, runtime guardrails & data-loss prevention for LLM tool calls. 8-layer defense against data exfiltration & dangerous commands. Zero dependencies. SDK + OpenClaw plugin. Supports LangChain, AutoGPT, Claude Code, Cursor, OpenAI Agents.",
   "keywords": [
     "shellward",
