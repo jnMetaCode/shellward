@@ -377,6 +377,22 @@ export class ShellWard {
       return { allowed: false, level: 'CRITICAL', reason, ruleId: 'no_payment' }
     }
 
+    // Block outbound actions when sensitive data was recently accessed (DLP via Gate)
+    const outboundActions = ['send_email', 'send_message', 'post_tweet', 'http_post', 'curl_post']
+    if (outboundActions.includes(action) && this.hasSensitiveData) {
+      const reason = this.locale === 'zh'
+        ? `数据外泄拦截: 近期访问了敏感数据，禁止通过 ${action} 向外部发送`
+        : `Data exfiltration blocked: sensitive data recently accessed, ${action} denied`
+      this.log.write({
+        level: 'CRITICAL',
+        layer: 'L5',
+        action: 'block',
+        detail: `Gate denied (DLP): ${action}`,
+        pattern: 'gate_data_exfil',
+      })
+      return { allowed: false, level: 'CRITICAL', reason, ruleId: 'gate_data_exfil' }
+    }
+
     this.log.write({
       level: 'INFO',
       layer: 'L5',

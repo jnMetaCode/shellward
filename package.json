@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "AI Agent Security Middleware — 8-layer defense against prompt injection, data exfiltration & dangerous commands. DLP model: use data freely, block external leaks. Zero dependencies. SDK + OpenClaw plugin. Supports LangChain, AutoGPT, Claude Code, Cursor, OpenAI Agents.",
   "keywords": [
     "shellward",
