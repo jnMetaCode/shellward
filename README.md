@@ -224,6 +224,23 @@ password: "MyP@ssw0rd!"       → Detected (Password)
 
 Remote vuln DB syncs every 24h, falls back to local DB when offline.
 
+## Why ShellWard?
+
+| Capability | ShellWard | [agentguard](https://github.com/GoPlusSecurity/agentguard) | [pipelock](https://github.com/luckyPipewrench/pipelock) | [Sage](https://github.com/avast/sage) | [AgentSeal](https://github.com/AgentSeal/agentseal) |
+|---|---|---|---|---|---|
+| **DLP data flow** (read→send=block) | ✅ | ❌ | Proxy-based | ❌ | ❌ |
+| **Chinese PII** (ID card, bank card) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Chinese injection rules** | 18 rules | ❌ | ❌ | ❌ | ❌ |
+| **Defense layers** | 8 | 3 | 11 (proxy) | ~2 | ~2 |
+| **Zero dependencies** | ✅ (npm) | ✅ | Go binary | Cloud API | Python |
+| **Runtime blocking** | ✅ | ✅ | ✅ (proxy) | ✅ | ❌ (scanner) |
+| **Architecture** | In-process middleware | Hook-based guard | HTTP proxy | Hook + cloud | Scan + monitor |
+| **Detection rules** | 32 | 24 | 36 DLP patterns | 200+ YAML | 191+ |
+
+> ShellWard is the only tool with **DLP-style data flow tracking** + **Chinese language security** + **zero dependencies** in a single package.
+>
+> Recent research ([arXiv:2603.08665](https://arxiv.org/abs/2603.08665)) demonstrates GenAI discovering 38 real-world vulnerabilities in 7 hours — AI-powered attacks are scaling fast. Defense must be built into the agent layer.
+
 ## Author
 
 [jnMetaCode](https://github.com/jnMetaCode) · Apache-2.0
@@ -280,6 +297,23 @@ guard.checkOutbound('send_email', {...})  // → { allowed: false } (读过敏�
 - **中文注入检测**：18 条中文规则 + 14 条英文规则，支持中英混合攻击检测
 - **数据外泄链**：读敏感数据 → send_email / HTTP POST / curl 外发 = 拦截
 - **零依赖**、零配置、Apache-2.0
+
+### 为什么选 ShellWard？
+
+| 能力 | ShellWard | [agentguard](https://github.com/GoPlusSecurity/agentguard) | [pipelock](https://github.com/luckyPipewrench/pipelock) | [Sage](https://github.com/avast/sage) | [AgentSeal](https://github.com/AgentSeal/agentseal) |
+|---|---|---|---|---|---|
+| **DLP 数据流** (读→发=拦截) | ✅ | ❌ | Proxy 架构 | ❌ | ❌ |
+| **中文 PII 检测** (身份证、银行卡) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **中文注入规则** | 18 条 | ❌ | ❌ | ❌ | ❌ |
+| **防御层数** | 8 层 | 3 层 | 11 层(proxy) | ~2 层 | ~2 层 |
+| **零依赖** | ✅ (npm) | ✅ | Go 二进制 | 需云 API | 需 Python |
+| **运行时拦截** | ✅ | ✅ | ✅ (proxy) | ✅ | ❌ (扫描器) |
+| **架构** | 进程内中间件 | Hook 守护 | HTTP 代理 | Hook + 云端 | 扫描 + 监控 |
+| **检测规则数** | 32 | 24 | 36 DLP 模式 | 200+ YAML | 191+ |
+
+> ShellWard 是唯一同时具备 **DLP 数据流追踪** + **中文语言安全** + **零依赖** 的 AI Agent 安全工具。
+>
+> 最新研究 ([arXiv:2603.08665](https://arxiv.org/abs/2603.08665)) 显示 GenAI 在 7 小时内发现 38 个真实漏洞 — AI 驱动的攻击正在规模化，防御必须内建到 Agent 层。
 
 ### 作者
 
