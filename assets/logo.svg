@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2332"/>
+      <stop offset="100%" style="stop-color:#0d1520"/>
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e63946"/>
+      <stop offset="50%" style="stop-color:#c1121f"/>
+      <stop offset="100%" style="stop-color:#780000"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Shield shape - outer border -->
+  <path d="M256 28 L460 120 L460 260 C460 370 370 450 256 492 C142 450 52 370 52 260 L52 120 Z"
+        fill="url(#borderGrad)" />
+
+  <!-- Shield shape - inner fill -->
+  <path d="M256 44 L446 130 L446 258 C446 362 360 438 256 478 C152 438 66 362 66 258 L66 130 Z"
+        fill="url(#shieldGrad)" />
+
+  <!-- Terminal window top bar -->
+  <rect x="120" y="155" width="272" height="195" rx="12" fill="#0f1923" stroke="#2a3a4e" stroke-width="2"/>
+  <rect x="120" y="155" width="272" height="30" rx="12" fill="#1a2a3a"/>
+  <rect x="120" y="173" width="272" height="12" fill="#1a2a3a"/>
+
+  <!-- Window dots -->
+  <circle cx="142" cy="170" r="6" fill="#e63946"/>
+  <circle cx="162" cy="170" r="6" fill="#f4a261"/>
+  <circle cx="182" cy="170" r="6" fill="#2a9d8f"/>
+
+  <!-- Terminal prompt: >_ -->
+  <text x="148" y="270" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace" font-size="64" font-weight="bold" fill="#e63946" filter="url(#glow)">
+    &gt;_
+  </text>
+
+  <!-- Shield checkmark / lock icon -->
+  <g transform="translate(295, 225)" filter="url(#glow)">
+    <!-- Lock body -->
+    <rect x="0" y="18" width="36" height="28" rx="4" fill="none" stroke="#2a9d8f" stroke-width="3.5"/>
+    <!-- Lock shackle -->
+    <path d="M8 18 L8 10 C8 3 28 3 28 10 L28 18" fill="none" stroke="#2a9d8f" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Lock keyhole -->
+    <circle cx="18" cy="32" r="4" fill="#2a9d8f"/>
+    <rect x="16" y="32" width="4" height="8" rx="1" fill="#2a9d8f"/>
+  </g>
+
+  <!-- 8 defense layer indicators (left side) -->
+  <g opacity="0.7">
+    <rect x="130" y="300" width="18" height="4" rx="2" fill="#2a9d8f"/>
+    <rect x="130" y="308" width="18" height="4" rx="2" fill="#2a9d8f"/>
+    <rect x="130" y="316" width="18" height="4" rx="2" fill="#e63946"/>
+    <rect x="130" y="324" width="18" height="4" rx="2" fill="#2a9d8f"/>
+    <rect x="130" y="332" width="18" height="4" rx="2" fill="#f4a261"/>
+    <rect x="130" y="340" width="18" height="4" rx="2" fill="#2a9d8f"/>
+    <rect x="130" y="348" width="14" height="4" rx="2" fill="#e63946"/>
+    <rect x="130" y="356" width="10" height="4" rx="2" fill="#2a9d8f"/>
+  </g>
+
+  <!-- Scan lines text -->
+  <text x="155" y="312" font-family="'SF Mono', monospace" font-size="11" fill="#4a6a7a">SCAN OK</text>
+  <text x="155" y="325" font-family="'SF Mono', monospace" font-size="11" fill="#e63946">BLOCK</text>
+  <text x="155" y="338" font-family="'SF Mono', monospace" font-size="11" fill="#4a6a7a">DLP ...</text>
+  <text x="155" y="351" font-family="'SF Mono', monospace" font-size="11" fill="#2a9d8f">SAFE</text>
+</svg>
