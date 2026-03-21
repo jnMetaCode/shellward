@@ -2,10 +2,10 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
 import { join } from 'path'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
 
-import { getHomeDir } from '../utils'
+import { getHomeDir } from '../utils.js'
 const HOME = getHomeDir()
 const OPENCLAW_DIR = join(HOME, '.openclaw')
 

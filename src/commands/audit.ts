@@ -2,9 +2,9 @@
 
 import { readFileSync, statSync } from 'fs'
 import { join } from 'path'
-import { getHomeDir } from '../utils'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
+import { getHomeDir } from '../utils.js'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
 
 const LOG_FILE = join(getHomeDir(), '.openclaw', 'shellward', 'audit.jsonl')
 

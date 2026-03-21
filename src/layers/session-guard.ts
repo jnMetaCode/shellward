@@ -2,7 +2,7 @@
 // Thin adapter: wires OpenClaw hooks to ShellWard core engine for session monitoring
 // Compat: registers all known hook name variants
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupSessionGuard(api: any, guard: ShellWard, enforce: boolean) {
   const sessionEndHandler = () => {

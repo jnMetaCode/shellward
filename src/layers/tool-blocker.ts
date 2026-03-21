@@ -1,7 +1,7 @@
 // src/layers/tool-blocker.ts — L3 OpenClaw Adapter
 // Thin adapter: wires OpenClaw's before_tool_call hook to ShellWard core engine
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupToolBlocker(api: any, guard: ShellWard, enforce: boolean) {
   api.on('before_tool_call', (event: any) => {

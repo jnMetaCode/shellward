@@ -10,7 +10,7 @@
 import { get } from 'https'
 import { mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { getHomeDir } from './utils'
+import { getHomeDir } from './utils.js'
 
 const CACHE_DIR = join(getHomeDir(), '.openclaw', 'shellward')
 const CACHE_FILE = join(CACHE_DIR, 'update-cache.json')

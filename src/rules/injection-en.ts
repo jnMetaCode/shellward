@@ -1,6 +1,6 @@
 // src/rules/injection-en.ts — English prompt injection detection rules
 
-import type { InjectionRule } from '../types'
+import type { InjectionRule } from '../types.js'
 
 export const INJECTION_RULES_EN: InjectionRule[] = [
   {

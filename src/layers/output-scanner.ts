@@ -1,7 +1,7 @@
 // src/layers/output-scanner.ts — L2 OpenClaw Adapter
 // Thin adapter: wires OpenClaw's tool_result_persist hook to ShellWard core engine
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupOutputScanner(api: any, guard: ShellWard) {
   api.on('tool_result_persist', (event: any) => {

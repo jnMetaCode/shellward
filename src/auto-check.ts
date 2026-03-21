@@ -4,8 +4,8 @@
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { getHomeDir } from './utils'
-import { fetchVulnDB, compareVersions } from './update-check'
+import { getHomeDir } from './utils.js'
+import { fetchVulnDB, compareVersions } from './update-check.js'
 
 const OPENCLAW_DIR = join(getHomeDir(), '.openclaw')
 

@@ -1,6 +1,6 @@
 // src/rules/protected-paths.ts — Paths that should not be written/deleted (bilingual)
 
-import type { ProtectedPathRule } from '../types'
+import type { ProtectedPathRule } from '../types.js'
 
 export const PROTECTED_PATHS: ProtectedPathRule[] = [
   {

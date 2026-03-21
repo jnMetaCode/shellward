@@ -1,6 +1,6 @@
 // src/rules/injection-zh.ts — Chinese prompt injection detection rules
 
-import type { InjectionRule } from '../types'
+import type { InjectionRule } from '../types.js'
 
 export const INJECTION_RULES_ZH: InjectionRule[] = [
   {

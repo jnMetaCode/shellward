@@ -2,8 +2,8 @@
 
 import { appendFileSync, mkdirSync, renameSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { getHomeDir } from './utils'
-import type { AuditEntry, ShellWardConfig } from './types'
+import { getHomeDir } from './utils.js'
+import type { AuditEntry, ShellWardConfig } from './types.js'
 
 const LOG_DIR = join(getHomeDir(), '.openclaw', 'shellward')
 const LOG_FILE = join(LOG_DIR, 'audit.jsonl')

@@ -1,8 +1,8 @@
 // src/commands/upgrade-openclaw.ts — 一键升级 OpenClaw，减少手动操作
 
 import { execSync } from 'child_process'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
 
 export function registerUpgradeOpenClawCommand(api: any, config: ShellWardConfig) {
   const locale = resolveLocale(config)

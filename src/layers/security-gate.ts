@@ -1,7 +1,7 @@
 // src/layers/security-gate.ts — L5 OpenClaw Adapter
 // Thin adapter: registers shellward_check tool via OpenClaw's registerTool API
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 function textResult(text: string) {
   return {

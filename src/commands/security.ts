@@ -3,9 +3,9 @@
 import { readFileSync, statSync, existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
-import { getHomeDir } from '../utils'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
+import { getHomeDir } from '../utils.js'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
 
 const LOG_DIR = join(getHomeDir(), '.openclaw', 'shellward')
 const LOG_FILE = join(LOG_DIR, 'audit.jsonl')

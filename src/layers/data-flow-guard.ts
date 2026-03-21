@@ -1,7 +1,7 @@
 // src/layers/data-flow-guard.ts — L7 OpenClaw Adapter
 // Thin adapter: wires OpenClaw hooks to ShellWard core engine for data flow tracking
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupDataFlowGuard(api: any, guard: ShellWard, enforce: boolean) {
   // Track file reads via after_tool_call

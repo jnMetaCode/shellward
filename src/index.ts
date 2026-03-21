@@ -7,25 +7,25 @@
 // See docs/定位.md — ShellWard is an AI Agent Security Layer,
 // NOT just an OpenClaw plugin. The core engine is platform-agnostic.
 
-import { ShellWard } from './core/engine'
-import { setupPromptGuard } from './layers/prompt-guard'
-import { setupOutputScanner } from './layers/output-scanner'
-import { setupToolBlocker } from './layers/tool-blocker'
-import { setupInputAuditor } from './layers/input-auditor'
-import { setupSecurityGate } from './layers/security-gate'
-import { setupOutboundGuard } from './layers/outbound-guard'
-import { setupDataFlowGuard } from './layers/data-flow-guard'
-import { setupSessionGuard } from './layers/session-guard'
-import { registerAllCommands } from './commands/index'
-import { checkForUpdate } from './update-check'
-import { runAutoCheckOnStartup } from './auto-check'
+import { ShellWard } from './core/engine.js'
+import { setupPromptGuard } from './layers/prompt-guard.js'
+import { setupOutputScanner } from './layers/output-scanner.js'
+import { setupToolBlocker } from './layers/tool-blocker.js'
+import { setupInputAuditor } from './layers/input-auditor.js'
+import { setupSecurityGate } from './layers/security-gate.js'
+import { setupOutboundGuard } from './layers/outbound-guard.js'
+import { setupDataFlowGuard } from './layers/data-flow-guard.js'
+import { setupSessionGuard } from './layers/session-guard.js'
+import { registerAllCommands } from './commands/index.js'
+import { checkForUpdate } from './update-check.js'
+import { runAutoCheckOnStartup } from './auto-check.js'
 
 const CURRENT_VERSION = '0.5.10'
 
 // Re-export core engine for SDK usage
-export { ShellWard } from './core/engine'
-export type { CheckResult, ScanResult, InjectionResult, ResponseCheckResult } from './core/engine'
-export type { ShellWardConfig } from './types'
+export { ShellWard } from './core/engine.js'
+export type { CheckResult, ScanResult, InjectionResult, ResponseCheckResult } from './core/engine.js'
+export type { ShellWardConfig } from './types.js'
 
 /**
  * Wrap api.on so every hook handler gets try-catch protection.

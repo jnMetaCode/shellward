@@ -1,13 +1,13 @@
 // src/commands/index.ts — Register all ShellWard commands
 
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
-import { registerSecurityCommand } from './security'
-import { registerAuditCommand } from './audit'
-import { registerHardenCommand } from './harden'
-import { registerScanPluginsCommand } from './scan-plugins'
-import { registerCheckUpdatesCommand } from './check-updates'
-import { registerUpgradeOpenClawCommand } from './upgrade-openclaw'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
+import { registerSecurityCommand } from './security.js'
+import { registerAuditCommand } from './audit.js'
+import { registerHardenCommand } from './harden.js'
+import { registerScanPluginsCommand } from './scan-plugins.js'
+import { registerCheckUpdatesCommand } from './check-updates.js'
+import { registerUpgradeOpenClawCommand } from './upgrade-openclaw.js'
 
 export function registerAllCommands(api: any, config: ShellWardConfig) {
   const locale = resolveLocale(config)

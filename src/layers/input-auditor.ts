@@ -2,7 +2,7 @@
 // Thin adapter: wires OpenClaw hooks to ShellWard core engine for injection detection
 // Compat: registers all known hook name variants — OpenClaw silently ignores unknown ones
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupInputAuditor(api: any, guard: ShellWard, enforce: boolean) {
   // Tool call parameter scanning via before_tool_call

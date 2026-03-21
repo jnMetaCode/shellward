@@ -8,14 +8,14 @@
 import { randomBytes } from 'crypto'
 import { resolve } from 'path'
 import { homedir } from 'os'
-import { DANGEROUS_COMMANDS, splitCommands } from '../rules/dangerous-commands'
-import { PROTECTED_PATHS } from '../rules/protected-paths'
-import { INJECTION_RULES_ZH } from '../rules/injection-zh'
-import { INJECTION_RULES_EN } from '../rules/injection-en'
-import { redactSensitive } from '../rules/sensitive-patterns'
-import { AuditLog } from '../audit-log'
-import { resolveLocale, DEFAULT_CONFIG } from '../types'
-import type { ShellWardConfig, ResolvedLocale, InjectionRule } from '../types'
+import { DANGEROUS_COMMANDS, splitCommands } from '../rules/dangerous-commands.js'
+import { PROTECTED_PATHS } from '../rules/protected-paths.js'
+import { INJECTION_RULES_ZH } from '../rules/injection-zh.js'
+import { INJECTION_RULES_EN } from '../rules/injection-en.js'
+import { redactSensitive } from '../rules/sensitive-patterns.js'
+import { AuditLog } from '../audit-log.js'
+import { resolveLocale, DEFAULT_CONFIG } from '../types.js'
+import type { ShellWardConfig, ResolvedLocale, InjectionRule } from '../types.js'
 
 // ===== Result Types =====
 

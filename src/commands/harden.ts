@@ -3,10 +3,10 @@
 import { existsSync, statSync, chmodSync, readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
 
-import { getHomeDir } from '../utils'
+import { getHomeDir } from '../utils.js'
 const HOME = getHomeDir()
 
 export function registerHardenCommand(api: any, config: ShellWardConfig) {

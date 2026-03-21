@@ -1,6 +1,6 @@
 // src/rules/sensitive-patterns.ts — PII & secret patterns for output redaction (global + China)
 
-import type { NamedPattern, ScanMatch } from '../types'
+import type { NamedPattern, ScanMatch } from '../types.js'
 
 export interface SensitivePattern {
   id: string

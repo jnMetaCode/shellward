@@ -1,6 +1,6 @@
 // src/rules/dangerous-commands.ts — Shell command blocklist (bilingual)
 
-import type { DangerousCommandRule } from '../types'
+import type { DangerousCommandRule } from '../types.js'
 
 export const DANGEROUS_COMMANDS: DangerousCommandRule[] = [
   {

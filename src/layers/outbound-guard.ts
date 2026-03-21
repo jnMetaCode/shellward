@@ -2,7 +2,7 @@
 // Thin adapter: wires OpenClaw hooks to ShellWard core engine for outbound response scanning
 // Compat: registers all known hook name variants
 
-import type { ShellWard } from '../core/engine'
+import type { ShellWard } from '../core/engine.js'
 
 export function setupOutboundGuard(api: any, guard: ShellWard, enforce: boolean) {
   const handler = (event: any) => {

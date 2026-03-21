@@ -3,9 +3,9 @@
 import { execSync } from 'child_process'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
-import type { ShellWardConfig } from '../types'
-import { resolveLocale } from '../types'
-import { checkForUpdate, fetchVulnDB, compareVersions, type VulnEntry } from '../update-check'
+import type { ShellWardConfig } from '../types.js'
+import { resolveLocale } from '../types.js'
+import { checkForUpdate, fetchVulnDB, compareVersions, type VulnEntry } from '../update-check.js'
 
 // Local fallback vulnerability database (used when remote fetch fails)
 // Contains only CVE-assigned vulnerabilities as minimum baseline
