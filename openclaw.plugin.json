@@ -2,7 +2,7 @@
   "id": "shellward",
   "name": "ShellWard",
   "description": "AI Agent Security Middleware — injection detection, dangerous operation blocking, PII audit (incl. Chinese ID card, phone, bank card), data exfiltration prevention. SDK + OpenClaw plugin.",
-  "version": "0.5.3",
+  "version": "0.5.10",
   "skills": ["./skills"],
   "configSchema": {
     "type": "object",

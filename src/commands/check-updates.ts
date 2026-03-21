@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import type { ShellWardConfig } from '../types'
 import { resolveLocale } from '../types'
-import { checkForUpdate, fetchVulnDB, compareVersions } from '../update-check'
+import { checkForUpdate, fetchVulnDB, compareVersions, type VulnEntry } from '../update-check'
 
 // Local fallback vulnerability database (used when remote fetch fails)
 // Contains only CVE-assigned vulnerabilities as minimum baseline
@@ -92,7 +92,7 @@ export function registerCheckUpdatesCommand(api: any, config: ShellWardConfig) {
       // 3. Check known vulnerabilities (remote DB with local fallback)
       lines.push(zh ? '### 已知漏洞检查' : '### Known Vulnerability Check')
 
-      let vulnDB = LOCAL_VULNS
+      let vulnDB: VulnEntry[] = LOCAL_VULNS
       let alerts: { id: string; severity: string; date: string; description_zh: string; description_en: string }[] = []
       let dbSource = 'local'
       try {

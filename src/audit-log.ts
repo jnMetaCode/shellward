@@ -34,13 +34,17 @@ export class AuditLog {
     } catch { /* directory may already exist */ }
   }
 
-  write(entry: Omit<AuditEntry, 'ts' | 'mode'>): void {
+  write(entry: Pick<AuditEntry, 'level' | 'layer' | 'action' | 'detail'> & Record<string, unknown>): void {
     try {
       const record: AuditEntry = {
+        ...entry,
+        level: entry.level,
+        layer: entry.layer,
+        action: entry.action,
+        detail: entry.detail,
         ts: new Date().toISOString(),
         mode: this.config.mode,
         riskScore: RISK_SCORES[entry.level] ?? 0,
-        ...entry,
       }
       appendFileSync(LOG_FILE, JSON.stringify(record) + '\n', { mode: 0o600 })
       this.rotateIfNeeded()

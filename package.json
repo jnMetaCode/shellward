@@ -41,18 +41,21 @@
     "url": "https://github.com/jnMetaCode/shellward"
   },
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "test": "npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-sdk.ts",
+    "build": "tsc",
+    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts",
     "test:integration": "npx tsx test-integration.ts",
     "test:edge": "npx tsx test-edge-cases.ts",
-    "test:sdk": "npx tsx test-sdk.ts"
+    "test:sdk": "npx tsx test-sdk.ts",
+    "prepublishOnly": "npm run build"
   },
   "openclaw": {
     "extensions": [
@@ -61,6 +64,7 @@
   },
   "files": [
     "src/",
+    "dist/",
     "skills/",
     "openclaw.plugin.json",
     "vuln-db.json",
@@ -71,5 +75,9 @@
   ],
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
   }
 }
