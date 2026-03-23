@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jnMetaCode/shellward",
+  "description": "AI agent security: 7 MCP tools for injection detection, PII scanning, command safety, DLP.",
+  "repository": {
+    "url": "https://github.com/jnMetaCode/shellward",
+    "source": "github"
+  },
+  "version": "0.5.11",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "shellward",
+      "version": "0.5.11",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Security mode: enforce (block + log) or audit (log only)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "SHELLWARD_MODE"
+        },
+        {
+          "description": "Locale: auto, zh, or en",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "SHELLWARD_LOCALE"
+        },
+        {
+          "description": "Injection detection threshold 0-100 (lower = stricter)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "SHELLWARD_THRESHOLD"
+        }
+      ]
+    }
+  ]
+}

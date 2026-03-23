@@ -17,7 +17,7 @@
 //     }
 //   }
 
-import { ShellWard } from './core/engine'
+import { ShellWard } from './core/engine.js'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -162,7 +162,7 @@ function executeTool(name: string, args: Record<string, unknown>): unknown {
         safe: result.safe,
         score: result.score,
         threshold: result.threshold,
-        matched_rules: result.matched.map(m => ({
+        matched_rules: result.matched.map((m: any) => ({
           id: m.id,
           name: m.name,
           score: m.score,
@@ -175,7 +175,7 @@ function executeTool(name: string, args: Record<string, unknown>): unknown {
       const result = guard.scanData(String(args.text || ''))
       return {
         has_sensitive_data: result.hasSensitiveData,
-        findings: result.findings.map(f => ({
+        findings: result.findings.map((f: any) => ({
           type: f.id,
           name: f.name,
           count: f.count,

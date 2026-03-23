@@ -108,13 +108,24 @@ const tests: TestCase[] = [
 ]
 
 async function runTests() {
-  const child = spawn('npx', ['tsx', 'src/mcp-server.ts'], {
+  const cwd = import.meta.dirname || process.cwd()
+  const child = spawn('node', ['--import', 'tsx', 'src/mcp-server.ts'], {
     stdio: ['pipe', 'pipe', 'pipe'],
-    cwd: import.meta.dirname,
+    cwd,
   })
 
   const responses = new Map<number, any>()
   let buf = Buffer.alloc(0)
+
+  child.stderr.on('data', (chunk: Buffer) => {
+    process.stderr.write(chunk)
+  })
+
+  child.on('exit', (code, sig) => {
+    if (code !== null && code !== 0) {
+      console.error(`  Server exited with code ${code}`)
+    }
+  })
 
   child.stdout.on('data', (chunk: Buffer) => {
     buf = Buffer.concat([buf, chunk])
@@ -144,14 +155,17 @@ async function runTests() {
     child.stdin.write(Buffer.concat([header, body]))
   }
 
+  // Wait for server to start
+  await new Promise(r => setTimeout(r, 2000))
+
   // Send all test requests with small delays
   for (const t of tests) {
     sendMsg(t.id, t.request.method, t.request.params as any)
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise(r => setTimeout(r, 150))
   }
 
   // Wait for all responses
-  await new Promise(r => setTimeout(r, 2000))
+  await new Promise(r => setTimeout(r, 3000))
 
   child.stdin.end()
   child.kill()
