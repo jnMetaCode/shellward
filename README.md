@@ -10,7 +10,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-112%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-123%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 [English](#demo) | [中文](#中文)
@@ -54,13 +54,15 @@ Your AI agent has full access to tools — shell, email, HTTP, file system. One 
 
 | Platform | Integration | Note |
 |----------|------------|------|
-| **OpenClaw** | Plugin + SDK | `openclaw plugins install shellward` — adapts to available hooks |
-| **Claude Code** | SDK | Anthropic's official CLI agent |
-| **Cursor** | SDK | AI-powered coding IDE |
+| **Claude Desktop** | MCP Server | Add to `claude_desktop_config.json` — 7 security tools |
+| **Cursor** | MCP Server | Add to `.cursor/mcp.json` |
+| **OpenClaw** | MCP + Plugin + SDK | `openclaw plugins install shellward` — adapts to available hooks |
+| **Claude Code** | MCP + SDK | Anthropic's official CLI agent |
 | **LangChain** | SDK | LLM application framework |
 | **AutoGPT** | SDK | Autonomous AI agents |
 | **OpenAI Agents** | SDK | GPT agent platform |
 | **Dify / Coze** | SDK | Low-code AI platforms |
+| **Any MCP Client** | MCP Server | stdio JSON-RPC, zero dependencies |
 | **Any AI Agent** | SDK | `npm install shellward` — 3 lines to integrate |
 
 ## Features
@@ -75,7 +77,59 @@ Your AI agent has full access to tools — shell, email, HTTP, file system. One 
 
 ## Quick Start
 
-**As SDK (any AI agent platform):**
+### As MCP Server
+
+ShellWard runs as a standalone MCP server over stdio — zero dependencies, no `@modelcontextprotocol/sdk` needed.
+
+**Claude Desktop / Cursor / any MCP client:**
+
+Add to your MCP config (`claude_desktop_config.json`, `.cursor/mcp.json`, etc.):
+
+```json
+{
+  "mcpServers": {
+    "shellward": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/shellward/src/mcp-server.ts"]
+    }
+  }
+}
+```
+
+**OpenClaw:**
+
+```json
+{
+  "mcpServers": {
+    "shellward": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/shellward/src/mcp-server.ts"]
+    }
+  }
+}
+```
+
+**7 MCP tools available:**
+
+| Tool | Description |
+|------|-------------|
+| `check_command` | Check if a shell command is safe (rm -rf, reverse shell, fork bomb...) |
+| `check_injection` | Detect prompt injection in text (32+ rules, zh+en) |
+| `scan_data` | Scan for PII & sensitive data (CN ID/phone/bank, API keys, SSN...) |
+| `check_path` | Check if file path operation is safe (.env, .ssh, credentials...) |
+| `check_tool` | Check if tool name is allowed (blocks payment/transfer tools) |
+| `check_response` | Audit AI response for canary leaks & PII exposure |
+| `security_status` | Get current security config & active layers |
+
+**Environment variables:**
+
+| Variable | Values | Default |
+|----------|--------|---------|
+| `SHELLWARD_MODE` | `enforce` / `audit` | `enforce` |
+| `SHELLWARD_LOCALE` | `auto` / `zh` / `en` | `auto` |
+| `SHELLWARD_THRESHOLD` | `0`-`100` | `60` |
+
+### As SDK (any AI agent platform):
 
 ```bash
 npm install shellward
@@ -215,7 +269,7 @@ password: "MyP@ssw0rd!"       → Detected (Password)
 | Command check throughput | 125,000/sec |
 | Injection detection throughput | ~7,700/sec |
 | Dependencies | 0 |
-| Tests | 112 passing |
+| Tests | 123 passing (incl. 11 MCP) |
 
 ## Vulnerability Database
 
@@ -269,22 +323,45 @@ ShellWard is built for teams that need runtime security for AI agents — whethe
 
 | 平台 | 集成方式 | 说明 |
 |------|---------|------|
-| **OpenClaw** | 插件 | `openclaw plugins install shellward`，开箱即用 |
-| **Claude Code** | SDK | Anthropic 官方 CLI Agent |
-| **Cursor** | SDK | AI 编程 IDE |
+| **Claude Desktop** | MCP 服务器 | 添加到 `claude_desktop_config.json`，7 个安全工具 |
+| **Cursor** | MCP 服务器 | 添加到 `.cursor/mcp.json` |
+| **OpenClaw** | MCP + 插件 + SDK | `openclaw plugins install shellward`，开箱即用 |
+| **Claude Code** | MCP + SDK | Anthropic 官方 CLI Agent |
 | **LangChain** | SDK | LLM 应用开发框架 |
 | **AutoGPT** | SDK | 自主 AI Agent |
 | **OpenAI Agents** | SDK | GPT Agent 平台 |
 | **Dify / Coze** | SDK | 低代码 AI 平台 |
+| **任意 MCP 客户端** | MCP 服务器 | stdio JSON-RPC，零依赖 |
 | **任意 AI Agent** | SDK | `npm install shellward`，3 行代码接入 |
 
 ### 安装
 
-```bash
-# OpenClaw 插件
-openclaw plugins install shellward
+**MCP 服务器模式（推荐）：**
 
-# 或 SDK 模式
+在 MCP 配置中添加（适用于 Claude Desktop、Cursor、OpenClaw 等）：
+
+```json
+{
+  "mcpServers": {
+    "shellward": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/shellward/src/mcp-server.ts"]
+    }
+  }
+}
+```
+
+零依赖，原生实现 MCP 协议。提供 7 个安全工具：命令检查、注入检测、敏感数据扫描、路径保护、工具策略、响应审计、安全状态。
+
+**OpenClaw 插件模式：**
+
+```bash
+openclaw plugins install shellward
+```
+
+**SDK 模式：**
+
+```bash
 npm install shellward
 ```
 

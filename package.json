@@ -51,10 +51,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts",
+    "mcp": "npx tsx src/mcp-server.ts",
+    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-mcp.ts",
     "test:integration": "npx tsx test-integration.ts",
     "test:edge": "npx tsx test-edge-cases.ts",
     "test:sdk": "npx tsx test-sdk.ts",
+    "test:mcp": "npx tsx test-mcp.ts",
     "prepublishOnly": "npm run build"
   },
   "openclaw": {
