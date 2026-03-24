@@ -1,14 +1,6 @@
 {
-  "name": "shellward",
-  "display_name": "ShellWard — AI Agent Security Middleware",
-  "description": "8-layer security defense for AI agents: prompt injection detection, DLP data flow tracking, command blocking, PII protection. 7 MCP tools over stdio. Zero dependencies.",
-  "repository": "https://github.com/jnMetaCode/shellward",
-  "license": "Apache-2.0",
-  "runtime": "node",
-  "mcpServers": {
-    "shellward": {
-      "command": "npx",
-      "args": ["-y", "shellward-mcp"]
-    }
-  }
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": [
+    "jnMetaCode"
+  ]
 }
