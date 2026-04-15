@@ -61,6 +61,7 @@ Your AI agent has full access to tools — shell, email, HTTP, file system. One 
 | **LangChain** | SDK | LLM application framework |
 | **AutoGPT** | SDK | Autonomous AI agents |
 | **OpenAI Agents** | SDK | GPT agent platform |
+| **Hermes Agent** | MCP Server | Nous Research's self-improving agent — register via MCP Integration |
 | **Dify / Coze** | SDK | Low-code AI platforms |
 | **Any MCP Client** | MCP Server | stdio JSON-RPC, zero dependencies |
 | **Any AI Agent** | SDK | `npm install shellward` — 3 lines to integrate |
@@ -330,6 +331,7 @@ ShellWard is built for teams that need runtime security for AI agents — whethe
 | **LangChain** | SDK | LLM 应用开发框架 |
 | **AutoGPT** | SDK | 自主 AI Agent |
 | **OpenAI Agents** | SDK | GPT Agent 平台 |
+| **Hermes Agent** | MCP 服务器 | Nous Research 自改进 Agent — 通过 MCP Integration 接入 |
 | **Dify / Coze** | SDK | 低代码 AI 平台 |
 | **任意 MCP 客户端** | MCP 服务器 | stdio JSON-RPC，零依赖 |
 | **任意 AI Agent** | SDK | `npm install shellward`，3 行代码接入 |
