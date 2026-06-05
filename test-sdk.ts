@@ -295,6 +295,24 @@ console.log('\n--- 自定义规则 ---')
   test('非法自定义正则被跳过而非崩溃', constructed)
 }
 
+// === 健壮性:对垃圾输入必须 fail-safe(不抛异常)===
+console.log('\n--- 输入健壮性 ---')
+{
+  const g = new ShellWard({ locale: 'zh' })
+  const junk: any[] = [null, undefined, 0, NaN, {}, [], 12345, true]
+  let threw = false
+  for (const v of junk) {
+    try {
+      g.checkCommand(v); g.checkInjection(v); g.scanData(v); g.checkTool(v)
+      g.checkPath(v, 'delete'); g.checkResponse(v); g.checkAction(v, v)
+      g.scanToolDefinition(v); g.checkOutbound(v, v); g.extractTextFields(v)
+    } catch { threw = true }
+  }
+  test('所有公共方法对 null/非字符串输入不抛异常', !threw)
+  test('null 输入按安全默认处理(checkCommand 放行空)', g.checkCommand(null as any).allowed)
+  test('null injection 安全', g.checkInjection(null as any).safe)
+}
+
 // === Summary ===
 console.log('\n========================================')
 console.log(`  SDK 测试结果: ${passed} 通过, ${failed} 失败 (共 ${passed + failed} 项)`)

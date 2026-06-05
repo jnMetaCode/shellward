@@ -256,6 +256,7 @@ export class ShellWard {
   // ========== L2: Data Scanner ==========
 
   scanData(text: string, toolName?: string): ScanResult {
+    text = asString(text)
     const [, findings] = redactSensitive(text, this.customSensitive)
     const hasSensitiveData = findings.length > 0
     const summary = findings.map(f => `${f.name}(${f.count})`).join(', ')
@@ -282,7 +283,7 @@ export class ShellWard {
   // ========== L3: Tool & Command Checker ==========
 
   checkTool(toolName: string): CheckResult {
-    const toolLower = toolName.toLowerCase()
+    const toolLower = asString(toolName).toLowerCase()
     const enforce = this.config.mode === 'enforce'
 
     // allowedTools always wins — user-trusted tools bypass policy.
@@ -317,7 +318,7 @@ export class ShellWard {
 
   checkCommand(cmd: string, toolName?: string): CheckResult {
     const enforce = this.config.mode === 'enforce'
-    const parts = splitCommands(cmd)
+    const parts = splitCommands(asString(cmd))
 
     for (const part of parts) {
       // Normalize shell-quote obfuscation (e.g. r''m / r""m → rm) before matching.
@@ -346,6 +347,7 @@ export class ShellWard {
   }
 
   checkPath(path: string, operation: 'write' | 'delete', toolName?: string): CheckResult {
+    path = asString(path)
     const enforce = this.config.mode === 'enforce'
     const normalizedPath = normalizePath(path)
 
@@ -372,6 +374,7 @@ export class ShellWard {
   // ========== L4: Injection Detection ==========
 
   checkInjection(text: string, options?: { source?: string; threshold?: number }): InjectionResult {
+    text = asString(text)
     const threshold = options?.threshold ?? this.config.injectionThreshold
     const enforce = this.config.mode === 'enforce'
 
@@ -430,6 +433,7 @@ export class ShellWard {
   // the SDK, the MCP server, or at plugin tool-discovery time.
 
   scanToolDefinition(tool: McpToolDefinition, options?: { threshold?: number }): ToolPoisoningResult {
+    tool = (tool && typeof tool === 'object') ? tool : { name: 'unknown' }
     const threshold = options?.threshold ?? 40
     const findings: ToolPoisoningFinding[] = []
     let score = 0
@@ -507,6 +511,8 @@ export class ShellWard {
   // ========== L5: Security Gate ==========
 
   checkAction(action: string, details: string): CheckResult {
+    action = asString(action)
+    details = asString(details)
     if (action === 'exec' || action === 'shell') {
       return this.checkCommand(details)
     }
@@ -550,6 +556,7 @@ export class ShellWard {
   // ========== L6: Response Checker ==========
 
   checkResponse(content: string): ResponseCheckResult {
+    content = asString(content)
     const canaryLeak = this._canaryToken ? content.includes(this._canaryToken) : false
 
     if (canaryLeak) {
@@ -638,7 +645,8 @@ export class ShellWard {
   }
 
   checkOutbound(toolName: string, params: Record<string, any>): CheckResult {
-    const toolLower = toolName.toLowerCase()
+    params = (params && typeof params === 'object') ? params : {}
+    const toolLower = asString(toolName).toLowerCase()
     const isOutbound = this.outboundTools.has(toolLower)
     const isDualUse = DUAL_USE_TOOLS.has(toolLower)
     const enforce = this.config.mode === 'enforce'
@@ -757,6 +765,7 @@ export class ShellWard {
 
   extractTextFields(args: Record<string, any>): string[] {
     const results: string[] = []
+    if (!args || typeof args !== 'object') return results
     for (const field of TEXT_FIELDS) {
       if (typeof args[field] === 'string' && args[field].length > 0) {
         results.push(args[field])
@@ -839,6 +848,17 @@ function normalizePath(p: string): string {
 
 function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max) + '...' : s
+}
+
+/**
+ * Defensive coercion at public API boundaries: a security check must fail safe
+ * on hostile/garbage input, never throw. null/undefined → '', everything else
+ * is stringified.
+ */
+function asString(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (v == null) return ''
+  try { return String(v) } catch { return '' }
 }
 
 /**

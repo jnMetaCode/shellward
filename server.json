@@ -6,12 +6,12 @@
     "url": "https://github.com/jnMetaCode/shellward",
     "source": "github"
   },
-  "version": "0.6.0",
+  "version": "0.6.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "shellward",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "runtime": "node",
       "transport": {
         "type": "stdio"

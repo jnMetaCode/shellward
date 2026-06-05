@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] - 2026-06-05
+
+### Fixed
+- **Input robustness (fail-safe)**: every public engine method (`checkCommand`, `checkInjection`, `scanData`, `checkTool`, `checkPath`, `checkResponse`, `checkAction`, `checkOutbound`, `scanToolDefinition`, `extractTextFields`) now coerces hostile/garbage input (`null`, `undefined`, numbers, objects) instead of throwing — a security check must never crash on the input it inspects. Found by an adversarial QA pass; locked in with regression tests.
+
 ## [0.6.0] - 2026-06-05
 
 ### Added
