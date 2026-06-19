@@ -22,6 +22,8 @@
 
 import { ShellWard } from './core/engine.js'
 import { McpBaseline } from './mcp-baseline.js'
+import { runComplianceAudit } from './compliance/audit.js'
+import { renderComplianceReport } from './compliance/report.js'
 import { readFileSync } from 'fs'
 import { createInterface } from 'readline'
 import { fileURLToPath } from 'url'
@@ -163,6 +165,16 @@ const TOOLS = [
       properties: {},
     },
   },
+  {
+    name: 'compliance_check',
+    description: 'Run a China AI-compliance health check (网安法/PIPL/等保2.0/数据出境/AI标识) and return a red/yellow/green scorecard report. Detects overseas LLM endpoints (data-export risk), audit-log retention, enabled defense layers, and root execution.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        format: { type: 'string', enum: ['report', 'json'], description: 'Output format: "report" (Markdown scorecard, default) or "json" (raw result)' },
+      },
+    },
+  },
 ]
 
 // ===== Tool Execution =====
@@ -299,6 +311,31 @@ function executeTool(name: string, args: Record<string, unknown>): unknown {
           'data_flow_tracking (DLP)',
         ],
       }
+    }
+
+    case 'compliance_check': {
+      const report = runComplianceAudit(guard.config)
+      if (args.format === 'json') {
+        return {
+          score: report.score,
+          grade: report.grade,
+          passed: report.passed,
+          warned: report.warned,
+          failed: report.failed,
+          manual: report.manual,
+          total: report.total,
+          results: report.results.map(r => ({
+            id: r.control.id,
+            regulation: r.control.regulation,
+            article: r.control.article,
+            title: guard.locale === 'zh' ? r.control.title_zh : r.control.title_en,
+            status: r.status,
+            detail: guard.locale === 'zh' ? r.detail_zh : r.detail_en,
+          })),
+        }
+      }
+      // default: return Markdown report as text
+      return { report: renderComplianceReport(report, guard.locale) }
     }
 
     default:

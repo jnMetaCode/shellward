@@ -1,0 +1,18 @@
+# ShellWard 合规扫描 — PR 合规门禁示例
+# 用法：复制为 .github/workflows/compliance.yml 即可启用。
+# 每次 push / PR 自动扫描项目的合规风险，发现 critical 项（硬编码密钥 / 境外端点）时让 CI 失败。
+
+name: Compliance Scan
+on: [push, pull_request]
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellWard compliance scan
+        uses: jnMetaCode/shellward@main
+        with:
+          path: '.'
+          fail-on-critical: 'true'
+          locale: 'zh'

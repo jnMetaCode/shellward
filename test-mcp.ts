@@ -156,6 +156,24 @@ const tests: TestCase[] = [
       return text.rug_pull?.changed === true && text.safe === false
     },
   },
+  {
+    id: 12,
+    name: 'compliance_check returns scorecard report',
+    request: { method: 'tools/call', params: { name: 'compliance_check', arguments: {} } },
+    validate: (r) => {
+      const text = JSON.parse(r.result?.content?.[0]?.text || '{}')
+      return typeof text.report === 'string' && text.report.includes('/100')
+    },
+  },
+  {
+    id: 13,
+    name: 'compliance_check json format returns score',
+    request: { method: 'tools/call', params: { name: 'compliance_check', arguments: { format: 'json' } } },
+    validate: (r) => {
+      const text = JSON.parse(r.result?.content?.[0]?.text || '{}')
+      return typeof text.score === 'number' && Array.isArray(text.results)
+    },
+  },
 ]
 
 async function runTests() {

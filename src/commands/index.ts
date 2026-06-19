@@ -9,6 +9,7 @@ import { registerScanPluginsCommand } from './scan-plugins.js'
 import { registerScanMcpCommand } from './scan-mcp.js'
 import { registerCheckUpdatesCommand } from './check-updates.js'
 import { registerUpgradeOpenClawCommand } from './upgrade-openclaw.js'
+import { registerComplianceCommand } from './compliance.js'
 
 /** @returns number of registered commands (for the startup log). */
 export function registerAllCommands(api: any, config: ShellWardConfig): number {
@@ -22,6 +23,7 @@ export function registerAllCommands(api: any, config: ShellWardConfig): number {
   registerScanMcpCommand(api, config)
   registerCheckUpdatesCommand(api, config)
   registerUpgradeOpenClawCommand(api, config)
+  registerComplianceCommand(api, config)
 
   // Register /cg shortcut with help
   api.registerCommand({
@@ -35,6 +37,7 @@ export function registerAllCommands(api: any, config: ShellWardConfig): number {
 
 | 命令 | 说明 |
 |------|------|
+| \`/compliance\` | 🆕 AI 合规体检（网安法/PIPL/等保/数据出境/AI标识 红黄绿评分卡） |
 | \`/security\` | 安全状态总览（防御层、审计统计、系统检查） |
 | \`/audit [数量] [过滤]\` | 查看审计日志 (过滤: block/audit/critical/high) |
 | \`/harden\` | 安全扫描 · \`/harden fix\` 自动修复权限 |
@@ -50,6 +53,7 @@ L5 安全门 · L6 回复审计 · L7 数据流监控 · L8 会话安全`
 
 | Command | Description |
 |---------|-------------|
+| \`/compliance\` | 🆕 AI compliance check (CSL/PIPL/MLPS/cross-border/labeling scorecard) |
 | \`/security\` | Security status overview (layers, audit stats, system checks) |
 | \`/audit [count] [filter]\` | View audit log (filter: block/audit/critical/high) |
 | \`/harden\` | Security scan · \`/harden fix\` to auto-fix permissions |
@@ -64,6 +68,6 @@ L5 Security Gate · L6 Outbound Guard · L7 Data Flow Guard · L8 Session Guard`
     }),
   })
 
-  // 7 individual commands + /cg help
-  return 8
+  // 8 individual commands + /cg help
+  return 9
 }

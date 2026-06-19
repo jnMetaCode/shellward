@@ -1,0 +1,38 @@
+name: 'ShellWard Compliance Scan'
+description: 'Scan an AI project for China compliance risks (网安法/PIPL/等保2.0/数据出境/AI标识) — overseas-LLM endpoints, hardcoded secrets, Chinese PII, .env exposure.'
+author: 'jnMetaCode'
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Directory to scan'
+    required: false
+    default: '.'
+  fail-on-critical:
+    description: 'Fail the build if any critical finding is present (hardcoded secrets / overseas endpoints)'
+    required: false
+    default: 'true'
+  locale:
+    description: 'Report language: auto | zh | en'
+    required: false
+    default: 'auto'
+  version:
+    description: 'shellward npm version to run'
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ShellWard compliance scan
+      shell: bash
+      env:
+        SHELLWARD_LOCALE: ${{ inputs.locale }}
+      run: |
+        if [ "${{ inputs.fail-on-critical }}" = "true" ]; then
+          npx --yes shellward@${{ inputs.version }} scan "${{ inputs.path }}" --ci
+        else
+          npx --yes shellward@${{ inputs.version }} scan "${{ inputs.path }}"
+        fi

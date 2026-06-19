@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.2] - 2026-06-20
+
+### Added — 中国 AI 合规网关方向（合规体检 + 项目扫描 + 零安装 CLI）
+- **合规体检引擎** (`src/compliance/`): 把网安法 / PIPL / 等保2.0 / 数据出境 / AI标识 的 14 条可核查控制项结构化，跑出红黄绿评分卡（`regulations.ts` + `audit.ts` + `report.ts`）
+- **项目真实风险扫描** (`src/compliance/project-scan.ts`): 零依赖遍历项目，检测境外大模型端点与 **SDK 依赖**（数据出境）、硬编码密钥、文件中的中文 PII、`.env` 权限，输出 `文件:行` 级发现
+- **境外大模型识别** (`src/rules/overseas-llm.ts`): 端点 + 依赖清单（package.json / requirements.txt / pyproject.toml / go.mod）双路识别 OpenAI/Anthropic/Gemini 等 = 数据出境（中国差异化能力）
+- **零安装 CLI** (`src/cli.ts`): `npx shellward scan` 30 秒出"关于你项目"的合规评分卡；`--json` / `--ci` / `--out <file>` 导出；`shellward mcp` 子命令向后兼容
+- **发现驱动评分**: 项目实测风险按严重度扣分（封顶 40），分数反映真实风险而非自检开关
+- **MCP 工具 `compliance_check`** 与 **命令 `/compliance`**
+- **GitHub Action** (`action.yml`): PR 合规门禁，发现 critical 时让构建失败
+- `test-compliance.ts`（45 项合规测试）
+
+### Changed
+- `bin.shellward` 指向新 CLI (`dist/cli.js`)；`shellward-mcp` 仍指向 MCP server（向后兼容）
+- README 第一屏重写为"AI 合规网关"叙事，主推 `npx shellward scan`
+
 ## [0.6.1] - 2026-06-05
 
 ### Fixed

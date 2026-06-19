@@ -4,16 +4,39 @@
 
 # ShellWard
 
-**AI Agent Security Middleware** — Protect AI agents from prompt injection, data exfiltration, and dangerous command execution. ShellWard acts as an LLM security middleware and AI agent firewall, intercepting tool calls at runtime to enforce agent guardrails before damage is done.
-
-8-layer defense-in-depth, DLP-style data flow control, zero dependencies. Works as **standalone SDK** or **OpenClaw plugin**.
+**AI Agent Security & Compliance Gateway** — the AI agent security middleware built for **China's regulatory regime** (网安法 / PIPL / 等保2.0 / 数据出境 / AI标识). Scan your project for compliance risks, then block prompt injection, data exfiltration, and dangerous commands at runtime. Chinese-language threat detection + Chinese PII + zero dependencies — things English tools don't do.
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-183%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-228%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 [English](#demo) | [中文](#中文)
+
+## 30-Second Compliance Scan
+
+Zero install, read-only, nothing uploaded. Scan your AI project for compliance risks right now:
+
+```bash
+npx shellward scan
+```
+
+Outputs a red/yellow/green scorecard mapped to 网安法 / PIPL / 等保2.0 / 数据出境 / AI标识, plus the concrete `file:line` findings in your project:
+
+```
+## 🔍 项目实测风险
+🌐 数据出境风险: 2 ｜ 🔑 硬编码密钥: 3 ｜ 🪪 个人信息暴露: 2 ｜ 📂 .env 权限: 1
+
+- .env:2          境外大模型端点: OpenAI — 向其发送个人信息即构成数据出境
+- src/config.ts:3 硬编码 GitHub Token: ghp_12*** — 凭据不应写入源码
+- customers.csv:2 手机号 13912*** — 个人信息出现在文件中，需评估脱敏
+
+合规得分: 75/100  [B]   🟢 8 ｜ 🟡 3 ｜ 🔴 1 ｜ ⚪ 2
+```
+
+`npx shellward scan --json` for CI · `--ci` to fail the build on critical findings · see [GitHub Action](#github-action-pr-compliance-gate).
+
+> Detects overseas-LLM endpoints (**data-export risk** — a China-only concept English tools ignore), hardcoded secrets, Chinese PII in files, and `.env` exposure.
 
 ## Demo
 
@@ -113,6 +136,7 @@ If installed globally (`npm i -g shellward`), simply use `"command": "shellward-
 | `check_response` | Audit AI response for canary leaks & PII exposure |
 | `scan_mcp_tool` | Scan an MCP tool definition for poisoning + rug-pull |
 | `security_status` | Get current security config & active layers |
+| `compliance_check` | 🆕 Run a China AI-compliance health check (网安法/PIPL/等保/出境/标识) → red/yellow/green scorecard |
 
 **Environment variables:**
 
@@ -154,6 +178,27 @@ openclaw plugins install shellward
 ```
 
 Zero config, 8 layers active by default.
+
+## GitHub Action (PR Compliance Gate)
+
+Block hardcoded secrets and overseas-LLM data-export risk before they merge. Add to `.github/workflows/compliance.yml`:
+
+```yaml
+name: Compliance Scan
+on: [push, pull_request]
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jnMetaCode/shellward@main
+        with:
+          path: '.'
+          fail-on-critical: 'true'   # fail the build on critical findings
+          locale: 'zh'               # auto | zh | en
+```
+
+Or run it directly without the Action: `npx shellward scan --ci`.
 
 ## 8-Layer Defense
 
@@ -298,6 +343,7 @@ Invalid regexes are skipped (never throws), so user input can't break the guard.
 
 | Command | Description |
 |---------|-------------|
+| `/compliance` | 🆕 AI compliance scorecard (网安法/PIPL/等保/出境/标识) |
 | `/security` | Security status overview |
 | `/audit [n] [filter]` | View audit log (filter: block, audit, critical, high) |
 | `/harden` | Scan & fix security issues |
@@ -372,7 +418,34 @@ ShellWard is built for teams that need runtime security for AI agents — whethe
 
 ## 中文
 
-**AI Agent 安全中间件** — 保护 AI 代理免受提示词注入、数据泄露、危险命令执行。8 层纵深防御，零依赖。
+**AI Agent 安全 · 合规网关** — 唯一为中国监管（网安法 / PIPL / 等保2.0 / 数据出境 / AI标识 GB45438）和中文语境而生的 AI Agent 安全中间件。先一键体检项目合规风险，再在运行时拦截提示注入、数据外泄与危险命令。中文威胁检测 + 中文 PII + 零依赖——英文工具不做的事。
+
+### 30 秒合规体检
+
+零安装、只读、不上传任何数据。现在就扫你的 AI 项目：
+
+```bash
+npx shellward scan
+```
+
+输出一张映射到 **网安法 / PIPL / 等保2.0 / 数据出境 / AI标识** 的红黄绿评分卡，并列出项目里 `文件:行` 级别的真实风险：
+
+```
+## 🔍 项目实测风险
+🌐 数据出境风险: 2 ｜ 🔑 硬编码密钥: 3 ｜ 🪪 个人信息暴露: 2 ｜ 📂 .env 权限: 1
+
+- .env:2          境外大模型端点: OpenAI — 向其发送个人信息即构成数据出境
+- src/config.ts:3 硬编码 GitHub Token: ghp_12*** — 凭据不应写入源码
+- customers.csv:2 手机号 13912*** — 个人信息出现在文件中，需评估脱敏
+
+合规得分: 75/100  [B]   🟢 8 ｜ 🟡 3 ｜ 🔴 1 ｜ ⚪ 2
+```
+
+`--json` 供 CI 消费 · `--ci` 发现 critical 时让构建失败 · 也可作 [GitHub Action](#github-action-pr-compliance-gate) 接入 PR 门禁。
+
+> **检测重点**：境外大模型端点（**数据出境风险** — 中国独有、英文工具没有这个概念）、硬编码密钥、文件中的中文 PII、`.env` 暴露。命令形态 `/compliance`，MCP 工具 `compliance_check`。
+
+---
 
 ![ShellWard AI Agent 安全防火墙演示 — 拦截提示词注入、数据泄露和反弹Shell攻击](https://github.com/jnMetaCode/shellward/releases/download/v0.5.0/demo-zh.gif)
 

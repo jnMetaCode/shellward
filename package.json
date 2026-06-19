@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "mcpName": "io.github.jnMetaCode/shellward",
   "description": "AI agent security & MCP security middleware — prompt injection detection, AI firewall, runtime guardrails & data-loss prevention for LLM tool calls. 8-layer defense against data exfiltration & dangerous commands. Zero dependencies. SDK + OpenClaw plugin. Supports LangChain, AutoGPT, Claude Code, Cursor, OpenAI Agents, Hermes Agent.",
   "keywords": [
@@ -43,7 +43,7 @@
   },
   "type": "module",
   "bin": {
-    "shellward": "dist/mcp-server.js",
+    "shellward": "dist/cli.js",
     "shellward-mcp": "dist/mcp-server.js"
   },
   "main": "dist/index.js",
@@ -57,8 +57,9 @@
   "scripts": {
     "build": "tsc",
     "mcp": "npx tsx src/mcp-server.ts",
-    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-rugpull.ts && npx tsx test-redos.ts && npx tsx test-mcp-client.ts && npx tsx test-mcp.ts",
+    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-rugpull.ts && npx tsx test-redos.ts && npx tsx test-mcp-client.ts && npx tsx test-mcp.ts && npx tsx test-compliance.ts",
     "test:redos": "npx tsx test-redos.ts",
+    "test:compliance": "npx tsx test-compliance.ts",
     "test:integration": "npx tsx test-integration.ts",
     "test:edge": "npx tsx test-edge-cases.ts",
     "test:sdk": "npx tsx test-sdk.ts",
