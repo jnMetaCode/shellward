@@ -1,0 +1,24 @@
+# .shellwardignore — 从合规扫描中排除的路径（gitignore 风格）
+# 支持：dir/ 目录、*.ext 通配、精确相对路径、# 注释
+#
+# 这是 ShellWard 自身的配置：下面这些是「检测规则定义 / 测试桩 / 基准语料 / 演示」，
+# 本身就含有示例密钥与端点列表，不是真实风险。你的项目可仿照此文件排除测试/示例目录。
+
+# 检测规则定义（这些文件"是"规则本身，不是对境外模型的使用）
+src/rules/overseas-llm.ts
+src/rules/sensitive-patterns.ts
+src/rules/domestic-alternatives.ts
+src/rules/injection-zh.ts
+src/rules/injection-en.ts
+src/rules/dangerous-commands.ts
+src/rules/protected-paths.ts
+src/rules/tool-poisoning.ts
+
+# 测试、基准语料、演示（故意包含攻击样本/示例密钥）
+test-*.ts
+test-fixtures/
+bench/
+demo/
+
+# 数据文件
+vuln-db.json

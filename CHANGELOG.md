@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.5] - 2026-06-20
+
+### Changed — 扫描器精度（降"狼来了"误报）
+- **占位符 / 示例值过滤**：密钥类发现若值或所在行是明显占位符（`example` / `your-api-key` / `changeme` / `xxxx` / `<...>` / `AKIA...EXAMPLE` 等）则不再报为风险
+- **默认跳过噪声文件**：`package-lock.json` / `yarn.lock` / `pnpm-lock.yaml` / `*.min.js` / `*.map` / `*.snap`（不含密钥，只制造误报）
+- **`.shellwardignore`**：gitignore 风格的扫描排除（`dir/`、`*.ext`、精确路径），让用户排除测试桩/示例
+- 仓库内置 `.shellwardignore` 示例；**ShellWard 自扫从 96 个误报降到 0**（不再对自己"狼来了"）
+- `test-compliance.ts` 扩至 68 项；全套 **256 测试**全绿
+
 ## [0.6.4] - 2026-06-20
 
 ### Added

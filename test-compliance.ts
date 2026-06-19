@@ -270,6 +270,39 @@ console.log('\n--- HTML 合规报告 ---')
   }
 }
 
+// === 10. 降误报：占位符 / 噪声文件 / .shellwardignore ===
+console.log('\n--- 降误报与忽略 ---')
+{
+  const dir = mkdtempSync(join(tmpdir(), 'sw-fp-'))
+  try {
+    // 占位符密钥不应被报；结构真实的密钥应被报
+    writeFileSync(join(dir, 'placeholder.ts'),
+      'const k1 = "your-api-key-here"\nconst k2 = "sk-EXAMPLExxxxxxxxxxxxxxxxxxxx"\nconst pw = "password: changeme"\n')
+    writeFileSync(join(dir, 'real.ts'), 'const k = "sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq"\n')
+    // 噪声文件（lock）含 key 状字符串，应被默认跳过
+    writeFileSync(join(dir, 'package-lock.json'), '{"x":"sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq"}')
+    // 被 .shellwardignore 排除的目录
+    mkdirSync(join(dir, 'samples'))
+    writeFileSync(join(dir, 'samples', 'leak.ts'), 'const k = "sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq"\n')
+    writeFileSync(join(dir, '.shellwardignore'), '# test\nsamples/\n')
+
+    const scan = scanProject(dir)
+    const secretFiles = scan.findings.filter(f => f.kind === 'secret').map(f => f.file)
+    test('占位符密钥被过滤', !secretFiles.some(f => f.includes('placeholder')), secretFiles.join(','))
+    test('结构真实密钥被检出', secretFiles.some(f => f.includes('real.ts')))
+    test('lock 文件被跳过', !secretFiles.some(f => f.includes('package-lock')))
+    test('.shellwardignore 目录被排除', !secretFiles.some(f => f.includes('samples')))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+
+  // ShellWard 自身仓库不应"对自己狼来了"
+  const self = scanProject(process.cwd())
+  test('ShellWard 自身仓库自扫无 critical 误报',
+    self.findings.filter(f => f.severity === 'critical').length === 0,
+    `criticals=${self.findings.filter(f => f.severity === 'critical').length}`)
+}
+
 // === 总结 ===
 console.log(`\n========== 结果: ${passed} 通过, ${failed} 失败 ==========\n`)
 if (failed > 0) process.exit(1)
