@@ -9,7 +9,7 @@
 
 import { readdirSync, statSync, readFileSync } from 'fs'
 import { join, relative, basename } from 'path'
-import { detectOverseasLLM } from '../rules/overseas-llm.js'
+import { detectOverseasLLM, detectOverseasDeps, isDependencyManifest } from '../rules/overseas-llm.js'
 import { SENSITIVE_PATTERNS } from '../rules/sensitive-patterns.js'
 
 export type FindingKind = 'overseas' | 'secret' | 'pii' | 'env-perm'
@@ -124,10 +124,11 @@ function walk(
       checkEnvPerm(full, root, st.mode, findings)
     }
 
-    // 内容扫描：仅文本类扩展 + .env*，且大小受限
+    // 内容扫描：文本类扩展 + .env* + 依赖清单(含 go.mod)，且大小受限
     const isEnv = /^\.env(\..+)?$/.test(name)
+    const isDep = isDependencyManifest(name)
     const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : ''
-    if (!isEnv && !SCAN_EXT.has(ext)) continue
+    if (!isEnv && !isDep && !SCAN_EXT.has(ext)) continue
     if (st.size > MAX_FILE_BYTES) continue
 
     let content: string
@@ -137,7 +138,38 @@ function walk(
       continue
     }
     state.files++
+    if (isDep) scanDependencies(name, content, full, root, findings)
     scanContent(content, full, root, findings)
+  }
+}
+
+function scanDependencies(
+  name: string,
+  content: string,
+  full: string,
+  root: string,
+  findings: ProjectFinding[],
+): void {
+  const deps = detectOverseasDeps(name, content)
+  if (deps.length === 0) return
+  const file = rel(root, full)
+  const lines = content.split('\n')
+  for (const d of deps) {
+    if (findings.length >= MAX_TOTAL_FINDINGS) break
+    // 粗定位包名所在行
+    let line: number | undefined
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().includes(d.pkg.toLowerCase())) { line = i + 1; break }
+    }
+    findings.push({
+      kind: 'overseas',
+      file,
+      line,
+      detail: `境外大模型 SDK 依赖: ${d.pkg} (${d.provider_zh}) — 项目内含数据出境通道，调用即可能构成出境`,
+      severity: 'high',
+      provider_zh: d.provider_zh,
+      provider_en: d.provider_en,
+    })
   }
 }
 

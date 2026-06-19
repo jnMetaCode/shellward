@@ -49,6 +49,12 @@ export function renderComplianceReport(report: ComplianceReport, locale: 'zh' | 
   L.push(zh
     ? `🟢 合规 ${report.passed} ｜ 🟡 部分 ${report.warned} ｜ 🔴 不合规 ${report.failed} ｜ ⚪ 待确认 ${report.manual}　(共 ${report.total} 项)`
     : `🟢 Pass ${report.passed} ｜ 🟡 Partial ${report.warned} ｜ 🔴 Fail ${report.failed} ｜ ⚪ Manual ${report.manual}　(${report.total} controls)`)
+  if (report.projectPenalty && report.projectPenalty > 0) {
+    L.push('')
+    L.push(zh
+      ? `> 含项目实测风险扣分 **-${report.projectPenalty}**（见下方「项目实测风险」）`
+      : `> Includes **-${report.projectPenalty}** from project scan findings (see Project Scan Findings)`)
+  }
   L.push('')
 
   // ===== 优先整改（fail 项，按严重度） =====

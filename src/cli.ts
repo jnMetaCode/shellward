@@ -10,6 +10,7 @@
 // 设计目标：30 秒、零配置、出一张可截图的「你的项目」合规风险报告。
 
 import { resolve } from 'path'
+import { writeFileSync } from 'fs'
 import { ShellWard } from './core/engine.js'
 import { runProjectComplianceAudit } from './compliance/audit.js'
 import { renderComplianceReport, renderProjectFindings } from './compliance/report.js'
@@ -44,6 +45,7 @@ async function main() {
 function runScan(args: string[]) {
   const json = args.includes('--json')
   const ci = args.includes('--ci')
+  const outPath = flagValue(args, '--out')
   const dirArg = args.find(a => !a.startsWith('-'))
   const root = resolve(dirArg || process.cwd())
 
@@ -75,19 +77,29 @@ function runScan(args: string[]) {
       })),
     }, null, 2) + '\n')
   } else {
-    const out: string[] = []
-    out.push(zh
-      ? `\n扫描目录: ${root}\n`
-      : `\nScanned: ${root}\n`)
-    // 头条：项目实测风险（关于「你的项目」）
-    out.push(renderProjectFindings(scan, locale))
-    // 合规映射评分卡
-    out.push(renderComplianceReport(report, locale))
-    out.push('')
-    out.push(zh
-      ? '💡 这是只读扫描，未上传任何数据。要在运行时自动拦截风险，把 ShellWard 作为 MCP/插件接入你的 AI Agent。'
-      : '💡 Read-only scan, nothing uploaded. To block these risks at runtime, integrate ShellWard as an MCP server/plugin in your AI agent.')
-    process.stdout.write(out.join('\n') + '\n')
+    // 头条：项目实测风险（关于「你的项目」）+ 合规映射评分卡
+    const body = [
+      renderProjectFindings(scan, locale),
+      renderComplianceReport(report, locale),
+    ].join('\n')
+
+    if (outPath) {
+      const doc = `<!-- 扫描目录: ${root} -->\n\n` + body + '\n'
+      writeFileSync(resolve(outPath), doc, 'utf-8')
+      process.stdout.write(zh
+        ? `✅ 合规报告已导出: ${resolve(outPath)}\n   得分 ${report.score}/100 [${report.grade}]，可存档用于备案/审计。\n`
+        : `✅ Compliance report exported: ${resolve(outPath)}\n   Score ${report.score}/100 [${report.grade}].\n`)
+    } else {
+      const out = [
+        zh ? `\n扫描目录: ${root}\n` : `\nScanned: ${root}\n`,
+        body,
+        '',
+        zh
+          ? '💡 这是只读扫描，未上传任何数据。要在运行时自动拦截风险，把 ShellWard 作为 MCP/插件接入你的 AI Agent。'
+          : '💡 Read-only scan, nothing uploaded. To block these risks at runtime, integrate ShellWard as an MCP server/plugin in your AI agent.',
+      ]
+      process.stdout.write(out.join('\n') + '\n')
+    }
   }
 
   // CI 模式：有 critical 项目发现则非零退出
@@ -95,6 +107,14 @@ function runScan(args: string[]) {
     const criticals = scan.findings.filter(f => f.severity === 'critical').length
     if (criticals > 0) process.exit(1)
   }
+}
+
+/** 取 `--flag value` 或 `--flag=value` 的值 */
+function flagValue(args: string[], flag: string): string | undefined {
+  const i = args.indexOf(flag)
+  if (i >= 0 && args[i + 1] && !args[i + 1].startsWith('-')) return args[i + 1]
+  const eq = args.find(a => a.startsWith(flag + '='))
+  return eq ? eq.slice(flag.length + 1) : undefined
 }
 
 function printHelp() {
@@ -106,6 +126,7 @@ Usage:
   shellward [scan] [dir]   Scan a project for compliance risks (default)
   shellward scan --json    Output JSON (for CI)
   shellward scan --ci      Exit non-zero if critical findings
+  shellward scan --out f   Export the full report to a Markdown file
   shellward mcp            Start MCP server (stdio)
   shellward --help
 
@@ -118,6 +139,7 @@ PII in files, .env permissions. Maps to CSL / PIPL / MLPS / cross-border / label
   shellward [scan] [目录]   扫描项目的合规风险（默认命令）
   shellward scan --json     输出 JSON（CI 用）
   shellward scan --ci       有 critical 发现时非零退出
+  shellward scan --out 文件  导出完整报告为 Markdown（合规存档）
   shellward mcp             启动 MCP 服务器（stdio）
   shellward --help
 

@@ -55,6 +55,8 @@ export interface ComplianceReport {
   total: number
   results: ControlResult[]
   generatedAt: string
+  /** 项目实测风险造成的扣分（仅项目体检路径）；0 表示纯控制项评分 */
+  projectPenalty?: number
 }
 
 /** 层能力映射：控制项 id → 必须启用的层（全部启用才 pass，部分启用 warn，全关 fail） */
@@ -152,22 +154,42 @@ export function runProjectComplianceAudit(config: ShellWardConfig, root: string)
   const scan = scanProject(root)
   const env = gatherEnvFacts()
 
-  // 把文件中实测到的境外端点并入 facts（去重），使数据出境项基于真实证据
-  const seen = new Set(env.overseas.map(o => o.endpointId))
+  // 把文件中实测到的境外端点/依赖并入 facts（按 endpointId 或 provider 去重），
+  // 使数据出境项基于真实证据（含 SDK 依赖通道）
+  const seen = new Set(env.overseas.map(o => o.endpointId || o.provider_en))
   for (const f of scan.findings) {
-    if (f.kind === 'overseas' && f.endpointId && !seen.has(f.endpointId)) {
-      seen.add(f.endpointId)
-      env.overseas.push({
-        isOverseas: true,
-        endpointId: f.endpointId,
-        provider_zh: f.provider_zh,
-        provider_en: f.provider_en,
-      })
-    }
+    if (f.kind !== 'overseas') continue
+    const key = f.endpointId || f.provider_en || ''
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    env.overseas.push({
+      isOverseas: true,
+      endpointId: f.endpointId,
+      provider_zh: f.provider_zh,
+      provider_en: f.provider_en,
+    })
   }
 
   const report = runComplianceAudit(config, env)
+
+  // 发现驱动评分：项目实测风险按严重度扣分（封顶 40），使分数反映"你的真实风险"
+  const penalty = computeProjectPenalty(scan)
+  if (penalty > 0) {
+    report.score = Math.max(0, report.score - penalty)
+    report.grade = gradeOf(report.score)
+    report.projectPenalty = penalty
+  }
+
   return { report, scan }
+}
+
+const FINDING_PENALTY = { critical: 8, high: 4, medium: 1 } as const
+const MAX_PROJECT_PENALTY = 40
+
+function computeProjectPenalty(scan: ProjectScanResult): number {
+  let p = 0
+  for (const f of scan.findings) p += FINDING_PENALTY[f.severity]
+  return Math.min(MAX_PROJECT_PENALTY, p)
 }
 
 function checkControl(c: ComplianceControl, config: ShellWardConfig, env: EnvFacts): ControlResult {

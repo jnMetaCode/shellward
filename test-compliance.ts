@@ -6,8 +6,8 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, chmodSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
-import { detectOverseasLLM } from './src/rules/overseas-llm'
-import { runComplianceAudit } from './src/compliance/audit'
+import { detectOverseasLLM, detectOverseasDeps } from './src/rules/overseas-llm'
+import { runComplianceAudit, runProjectComplianceAudit } from './src/compliance/audit'
 import type { EnvFacts } from './src/compliance/audit'
 import { renderComplianceReport, renderProjectFindings } from './src/compliance/report'
 import { scanProject } from './src/compliance/project-scan'
@@ -156,6 +156,48 @@ console.log('\n--- 项目风险扫描 ---')
     } finally {
       rmSync(cleanDir, { recursive: true, force: true })
     }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+// === 6. 境外大模型 SDK 依赖检测 ===
+console.log('\n--- 境外 SDK 依赖检测 ---')
+{
+  const pkg = JSON.stringify({ dependencies: { openai: '^4.0.0', express: '^4' }, devDependencies: { '@anthropic-ai/sdk': '^0.20.0' } })
+  const m1 = detectOverseasDeps('package.json', pkg)
+  test('package.json 检出 openai + anthropic', m1.length === 2, `len=${m1.length}`)
+  test('package.json 不误报 express', !m1.some(d => d.pkg === 'express'))
+
+  const req = 'flask==2.0\nopenai>=1.0\ngoogle-generativeai\n# comment anthropic\n'
+  const m2 = detectOverseasDeps('requirements.txt', req)
+  test('requirements.txt 检出 openai + gemini', m2.some(d => d.pkg === 'openai') && m2.some(d => d.pkg === 'google-generativeai'))
+
+  const gomod = 'module x\nrequire github.com/sashabaranov/go-openai v1.2.0\n'
+  test('go.mod 检出 go-openai', detectOverseasDeps('go.mod', gomod).length === 1)
+
+  test('损坏的 package.json 不崩溃', detectOverseasDeps('package.json', '{bad json').length === 0)
+  test('纯净依赖无误报', detectOverseasDeps('package.json', '{"dependencies":{"lodash":"^4"}}').length === 0)
+}
+
+// === 7. 发现驱动评分 + 依赖并入 + 报告导出 ===
+console.log('\n--- 发现驱动评分 + 项目体检 ---')
+{
+  const dir = mkdtempSync(join(tmpdir(), 'sw-proj-'))
+  try {
+    writeFileSync(join(dir, 'package.json'),
+      JSON.stringify({ dependencies: { openai: '^4', '@anthropic-ai/sdk': '^0.2' } }, null, 2))
+    writeFileSync(join(dir, 'app.py'), 'KEY = "sk-abc123def456ghi789jkl012mno"\nphone = "13912345678"\n')
+
+    const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    test('体检检出境外 SDK 依赖', scan.findings.some(f => f.kind === 'overseas' && f.detail.includes('SDK')))
+    test('发现驱动扣分生效', (report.projectPenalty || 0) > 0, `penalty=${report.projectPenalty}`)
+    test('有风险时得分低于满分', report.score < 100, `score=${report.score}`)
+
+    // 对比：纯控制项评分（无项目风险）应更高
+    const cleanFactsLocal: EnvFacts = { isRoot: false, auditLog: { exists: true, entryCount: 10 }, overseas: [] }
+    const baseline = runComplianceAudit(DEFAULT_CONFIG, cleanFactsLocal)
+    test('项目体检得分 ≤ 无风险基线', report.score <= baseline.score, `${report.score} vs ${baseline.score}`)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
