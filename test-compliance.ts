@@ -11,6 +11,7 @@ import { runComplianceAudit, runProjectComplianceAudit } from './src/compliance/
 import type { EnvFacts } from './src/compliance/audit'
 import { renderComplianceReport, renderProjectFindings } from './src/compliance/report'
 import { scanProject } from './src/compliance/project-scan'
+import { suggestDomestic, DOMESTIC_MODELS } from './src/rules/domestic-alternatives'
 import { COMPLIANCE_CONTROLS } from './src/compliance/regulations'
 import { DEFAULT_CONFIG } from './src/types'
 import type { ShellWardConfig } from './src/types'
@@ -201,6 +202,39 @@ console.log('\n--- 发现驱动评分 + 项目体检 ---')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+}
+
+// === 8. 境内合规替代建议 ===
+console.log('\n--- 境内合规替代建议 ---')
+{
+  test('境内模型库非空且含通义/DeepSeek', DOMESTIC_MODELS.some(m => m.id === 'qwen') && DOMESTIC_MODELS.some(m => m.id === 'deepseek'))
+  test('所有列出的境内模型有 base_url', DOMESTIC_MODELS.every(m => m.baseUrl.startsWith('https://')))
+
+  const sOpenAI = suggestDomestic('openai', 'OpenAI', 'OpenAI')
+  test('OpenAI → 迁移难度低(零代码)', sOpenAI.difficulty_zh.includes('低') && sOpenAI.difficulty_zh.includes('base_url'))
+  test('OpenAI → 给出境内替代', sOpenAI.alternatives.length >= 3)
+
+  const sAnthropic = suggestDomestic('anthropic', 'Anthropic Claude', 'Anthropic Claude')
+  test('Anthropic → 迁移难度中(需改代码)', sAnthropic.difficulty_zh.includes('中'))
+
+  // 报告渲染：含境外依赖时出现替代建议段
+  const dir = mkdtempSync(join(tmpdir(), 'sw-dom-'))
+  try {
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { openai: '^4' } }))
+    const scan = scanProject(dir)
+    const md = renderProjectFindings(scan, 'zh')
+    test('报告含"境内合规替代建议"段', md.includes('境内合规替代建议'))
+    test('报告含具体境内 base_url', md.includes('dashscope.aliyuncs.com'))
+    test('报告含零代码迁移提示', md.includes('base_url') && md.includes('无需改动'))
+
+    // 无境外风险的干净项目不应出现替代段
+    const cleanDir = mkdtempSync(join(tmpdir(), 'sw-domc-'))
+    try {
+      writeFileSync(join(cleanDir, 'a.txt'), 'hello')
+      const cleanMd = renderProjectFindings(scanProject(cleanDir), 'zh')
+      test('干净项目无替代建议段', !cleanMd.includes('境内合规替代建议'))
+    } finally { rmSync(cleanDir, { recursive: true, force: true }) }
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 }
 
 // === 总结 ===

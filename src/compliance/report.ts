@@ -7,6 +7,7 @@ import { REGULATION_NAMES } from './regulations.js'
 import type { Regulation } from './regulations.js'
 import type { ComplianceReport, ControlResult, ControlStatus } from './audit.js'
 import type { ProjectScanResult, FindingKind } from './project-scan.js'
+import { suggestDomestic } from '../rules/domestic-alternatives.js'
 
 const STATUS_ICON: Record<ControlStatus, string> = {
   pass: '🟢',
@@ -157,7 +158,59 @@ export function renderProjectFindings(scan: ProjectScanResult, locale: 'zh' | 'e
     }
     L.push('')
   }
+
+  // 处方：境内合规替代建议（仅当存在境外模型风险时）
+  L.push(...renderDomesticGuidance(scan, locale))
+
   return L.join('\n')
+}
+
+/** 渲染「境内合规替代建议」—— 把数据出境风险变成可执行的迁移处方 */
+function renderDomesticGuidance(scan: ProjectScanResult, locale: 'zh' | 'en'): string[] {
+  const zh = locale === 'zh'
+  const overseas = scan.findings.filter(f => f.kind === 'overseas')
+  if (overseas.length === 0) return []
+
+  // 去重境外厂商
+  const seen = new Set<string>()
+  const providers: { key: string; zh?: string; en?: string }[] = []
+  for (const f of overseas) {
+    const key = (f.endpointId || f.provider_en || f.provider_zh || '').toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    providers.push({ key: f.endpointId || f.provider_en || '', zh: f.provider_zh, en: f.provider_en })
+  }
+
+  const L: string[] = []
+  L.push(zh ? '## ✅ 境内合规替代建议' : '## ✅ Domestic Compliance Alternatives')
+  L.push('')
+  L.push(zh
+    ? '把数据出境风险变成可执行的迁移路径。境内主流模型多为 **OpenAI 兼容**接口：'
+    : 'Turn data-export risk into a concrete migration path. Most domestic models are **OpenAI-compatible**:')
+  L.push('')
+
+  // 每个境外厂商的迁移难度
+  for (const p of providers) {
+    const s = suggestDomestic(p.key, p.zh, p.en)
+    L.push(zh
+      ? `- **${s.overseas_zh}** → 迁移难度: ${s.difficulty_zh}`
+      : `- **${s.overseas_en}** → migration: ${s.difficulty_en}`)
+  }
+  L.push('')
+
+  // 共享的境内候选表（取第一个建议的 alternatives，避免重复）
+  const alts = suggestDomestic(providers[0].key, providers[0].zh, providers[0].en).alternatives
+  L.push(zh ? '| 境内模型 | 厂商 | OpenAI 兼容 base_url |' : '| Domestic model | Vendor | OpenAI-compatible base_url |')
+  L.push('|---|---|---|')
+  for (const m of alts) {
+    L.push(`| ${zh ? m.name_zh : m.name_en} | ${m.vendor_zh} | \`${m.baseUrl}\` |`)
+  }
+  L.push('')
+  L.push(zh
+    ? '> 对使用 `openai` SDK 的项目：通常仅需把 `base_url` 与 `api_key` 换成上表任一境内模型即可，业务代码无需改动。迁移前请以各厂商官方文档为准。'
+    : '> For projects using the `openai` SDK: usually just swap `base_url` + `api_key` to a domestic model above — no business-code change. Verify against each vendor’s official docs first.')
+  L.push('')
+  return L
 }
 
 function scoreBar(score: number): string {

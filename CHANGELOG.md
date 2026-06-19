@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.3] - 2026-06-20
+
+### Added
+- **境内合规替代建议（处方）** (`src/rules/domestic-alternatives.ts`): 扫到境外大模型（端点/SDK 依赖）时，自动给出境内已备案模型替代方案（通义千问 DashScope / DeepSeek / Kimi / 智谱 GLM / 豆包 / 文心）及其 OpenAI 兼容 `base_url` 与迁移难度。把"数据出境风险"变成可执行的迁移路径——`openai` SDK 项目通常只需改 `base_url`+`key`、代码零改动
+- 报告新增「境内合规替代建议」段（`/compliance`、`compliance_check`、`npx shellward scan` 均含）
+- `test-compliance.ts` 扩至 54 项；全套 **242 测试**全绿
+
 ## [0.6.2] - 2026-06-20
 
 ### Added — 中国 AI 合规网关方向（合规体检 + 项目扫描 + 零安装 CLI）
