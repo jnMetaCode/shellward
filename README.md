@@ -8,7 +8,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-242%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-251%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 [English](#demo) | [中文](#中文)
@@ -34,7 +34,7 @@ Outputs a red/yellow/green scorecard mapped to 网安法 / PIPL / 等保2.0 / �
 合规得分: 75/100  [B]   🟢 8 ｜ 🟡 3 ｜ 🔴 1 ｜ ⚪ 2
 ```
 
-`npx shellward scan --json` for CI · `--ci` to fail the build on critical findings · see [GitHub Action](#github-action-pr-compliance-gate).
+`npx shellward scan --json` for CI · `--ci` to fail the build on critical findings · `--html report.html` for a self-contained report you can print to PDF for 备案/audit · see [GitHub Action](#github-action-pr-compliance-gate).
 
 > Detects overseas-LLM endpoints (**data-export risk** — a China-only concept English tools ignore), hardcoded secrets, Chinese PII in files, and `.env` exposure. When it finds an overseas model (e.g. an `openai` dependency), it **prescribes domestic compliant alternatives** (通义千问 / DeepSeek / Kimi / 智谱) with their OpenAI-compatible `base_url` — most migrations are just a `base_url` swap.
 

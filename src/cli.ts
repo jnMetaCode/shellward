@@ -14,6 +14,7 @@ import { writeFileSync } from 'fs'
 import { ShellWard } from './core/engine.js'
 import { runProjectComplianceAudit } from './compliance/audit.js'
 import { renderComplianceReport, renderProjectFindings } from './compliance/report.js'
+import { renderHtmlReport } from './compliance/html-report.js'
 import { resolveLocale } from './types.js'
 
 const argv = process.argv.slice(2)
@@ -46,6 +47,7 @@ function runScan(args: string[]) {
   const json = args.includes('--json')
   const ci = args.includes('--ci')
   const outPath = flagValue(args, '--out')
+  const htmlPath = flagValue(args, '--html')
   const dirArg = args.find(a => !a.startsWith('-'))
   const root = resolve(dirArg || process.cwd())
 
@@ -76,6 +78,12 @@ function runScan(args: string[]) {
         id: r.control.id, regulation: r.control.regulation, status: r.status,
       })),
     }, null, 2) + '\n')
+  } else if (htmlPath) {
+    const html = renderHtmlReport(report, scan, locale, { root })
+    writeFileSync(resolve(htmlPath), html, 'utf-8')
+    process.stdout.write(zh
+      ? `✅ HTML 合规报告已导出: ${resolve(htmlPath)}\n   得分 ${report.score}/100 [${report.grade}]，浏览器打开可打印成 PDF，供备案/审计存档。\n`
+      : `✅ HTML compliance report exported: ${resolve(htmlPath)}\n   Score ${report.score}/100 [${report.grade}]. Open in a browser, print to PDF.\n`)
   } else {
     // 头条：项目实测风险（关于「你的项目」）+ 合规映射评分卡
     const body = [
@@ -127,6 +135,7 @@ Usage:
   shellward scan --json    Output JSON (for CI)
   shellward scan --ci      Exit non-zero if critical findings
   shellward scan --out f   Export the full report to a Markdown file
+  shellward scan --html f  Export a self-contained HTML report (print to PDF)
   shellward mcp            Start MCP server (stdio)
   shellward --help
 
@@ -140,6 +149,7 @@ PII in files, .env permissions. Maps to CSL / PIPL / MLPS / cross-border / label
   shellward scan --json     输出 JSON（CI 用）
   shellward scan --ci       有 critical 发现时非零退出
   shellward scan --out 文件  导出完整报告为 Markdown（合规存档）
+  shellward scan --html 文件 导出自包含 HTML 报告（浏览器可打印成 PDF）
   shellward mcp             启动 MCP 服务器（stdio）
   shellward --help
 

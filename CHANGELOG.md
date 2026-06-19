@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.4] - 2026-06-20
+
+### Added
+- **HTML 合规报告导出** (`src/compliance/html-report.ts`): `npx shellward scan --html report.html` 生成自包含、内联样式、零依赖的专业合规报告——可浏览器打开、打印成 PDF、用于等保/PIPL **备案与审计存档**。面向法务/合规/测评机构（终端输出之外的第二受众）
+- 评分仪表、项目实测风险表、境内替代建议、按法规分组的控制项表、免责声明，全部 HTML 转义防注入
+- `test-compliance.ts` 扩至 63 项；全套 **251 测试**全绿
+
 ## [0.6.3] - 2026-06-20
 
 ### Added

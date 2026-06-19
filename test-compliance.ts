@@ -11,6 +11,7 @@ import { runComplianceAudit, runProjectComplianceAudit } from './src/compliance/
 import type { EnvFacts } from './src/compliance/audit'
 import { renderComplianceReport, renderProjectFindings } from './src/compliance/report'
 import { scanProject } from './src/compliance/project-scan'
+import { renderHtmlReport } from './src/compliance/html-report'
 import { suggestDomestic, DOMESTIC_MODELS } from './src/rules/domestic-alternatives'
 import { COMPLIANCE_CONTROLS } from './src/compliance/regulations'
 import { DEFAULT_CONFIG } from './src/types'
@@ -235,6 +236,38 @@ console.log('\n--- 境内合规替代建议 ---')
       test('干净项目无替代建议段', !cleanMd.includes('境内合规替代建议'))
     } finally { rmSync(cleanDir, { recursive: true, force: true }) }
   } finally { rmSync(dir, { recursive: true, force: true }) }
+}
+
+// === 9. HTML 合规报告 ===
+console.log('\n--- HTML 合规报告 ---')
+{
+  const dir = mkdtempSync(join(tmpdir(), 'sw-html-'))
+  try {
+    // 含境外依赖 + 一个会引入 HTML 特殊字符的文件名风险点
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { openai: '^4' } }))
+    writeFileSync(join(dir, 'a.ts'), 'const t = "ghp_1234567890abcdefghijklmnopqrstuvwxyzAB"\n')
+    const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    const html = renderHtmlReport(report, scan, 'zh', { root: dir })
+
+    test('HTML 是完整文档', html.startsWith('<!DOCTYPE html>') && html.includes('</html>'))
+    test('HTML 自包含(内联 CSS, 无外链)', html.includes('<style>') && !/<link|<script src=/.test(html))
+    test('HTML 含评分', html.includes(String(report.score)))
+    test('HTML 含项目实测风险', html.includes('项目实测风险'))
+    test('HTML 含境内替代建议', html.includes('境内合规替代建议') && html.includes('dashscope'))
+    test('HTML 含五法规之一', html.includes('个人信息保护法'))
+    test('HTML 含打印样式', html.includes('@media print'))
+
+    // 英文版
+    const htmlEn = renderHtmlReport(report, scan, 'en', { root: dir })
+    test('英文 HTML 标题正确', htmlEn.includes('AI Application Compliance Report'))
+
+    // HTML 转义：注入恶意字符串不应破坏结构
+    const evil = { ...scan, findings: [{ kind: 'secret' as const, file: '<img src=x onerror=alert(1)>', detail: 'a & b <script>', severity: 'critical' as const }] }
+    const safe = renderHtmlReport(report, evil, 'zh', { root: '<b>x</b>' })
+    test('HTML 转义恶意输入', !safe.includes('<img src=x') && !safe.includes('<script>a') && safe.includes('&lt;img'))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 // === 总结 ===
