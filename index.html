@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShellWard — AI 应用合规网关｜网安法/PIPL/等保/数据出境一键体检</title>
+<meta name="description" content="一行命令扫出你的 AI 项目踩了哪些中国合规红线（网安法 2026/PIPL/等保2.0/数据出境/AI标识）。零上传、零依赖、开源。npx shellward scan">
+<meta property="og:title" content="ShellWard — AI 应用合规网关">
+<meta property="og:description" content="npx shellward scan — 30 秒查出 AI 项目的数据出境、硬编码密钥、个人信息暴露等合规风险，并给出境内替代处方。">
+<style>
+:root{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--brand:#cb0000;--bg:#f8fafc;--ok:#15803d}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:#fff;font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+a{color:var(--brand);text-decoration:none}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line)}
+nav .logo{font-weight:800;font-size:18px}
+nav .logo span{color:var(--brand)}
+nav a.gh{color:var(--ink);font-size:14px;border:1px solid var(--line);padding:6px 14px;border-radius:8px}
+.hero{text-align:center;padding:64px 0 40px}
+.hero h1{font-size:40px;line-height:1.25;margin:0 0 16px;letter-spacing:-.5px}
+.hero h1 .hl{color:var(--brand)}
+.hero p.sub{font-size:19px;color:var(--muted);max-width:680px;margin:0 auto 28px}
+.cmd{display:inline-flex;align-items:center;gap:12px;background:#0f172a;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;padding:14px 20px;border-radius:10px}
+.cmd button{background:#1e293b;color:#94a3b8;border:0;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}
+.cmd button:hover{color:#fff}
+.badges{margin-top:22px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.badges img{height:20px}
+section{padding:48px 0;border-top:1px solid var(--line)}
+h2{font-size:26px;margin:0 0 8px;text-align:center}
+.lead{color:var(--muted);text-align:center;max-width:680px;margin:0 auto 28px}
+.term{background:#0f172a;border-radius:12px;padding:20px 22px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;line-height:1.7;overflow-x:auto;white-space:pre}
+.term .r{color:#f87171}.term .y{color:#fbbf24}.term .g{color:#4ade80}.term .d{color:#64748b}.term .b{color:#7dd3fc}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px}
+.card{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--bg)}
+.card h3{margin:0 0 6px;font-size:17px}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.problem{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;margin-top:8px}
+.problem b{color:var(--brand)}
+.trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px}
+.trust div{text-align:center;padding:16px;border:1px solid var(--line);border-radius:10px}
+.trust .big{font-size:22px;font-weight:800;color:var(--ok)}
+.cta{text-align:center}
+.cta a.btn{display:inline-block;background:var(--brand);color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;font-size:17px;margin:8px}
+.cta a.btn.alt{background:#fff;color:var(--ink);border:1px solid var(--line)}
+footer{border-top:1px solid var(--line);padding:32px 0;color:var(--muted);font-size:14px;text-align:center}
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:600}
+td code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12.5px}
+@media(max-width:640px){.hero h1{font-size:30px}.cmd{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav>
+  <div class="logo">🛡️ Shell<span>Ward</span></div>
+  <a class="gh" href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a>
+</nav>
+
+<header class="hero">
+  <h1>AI 应用<span class="hl">合规网关</span><br>一行命令，查清你踩了哪些红线</h1>
+  <p class="sub">为中国监管而生的 AI Agent 安全合规工具。网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识，30 秒出一张红黄绿体检报告。</p>
+  <div class="cmd">
+    <span><span style="color:#64748b">$</span> npx shellward scan</span>
+    <button onclick="navigator.clipboard&&navigator.clipboard.writeText('npx shellward scan').then(()=>{this.textContent='已复制'})">复制</button>
+  </div>
+  <div class="badges">
+    <img src="https://img.shields.io/npm/v/shellward?color=cb0000&label=npm" alt="npm">
+    <img src="https://img.shields.io/badge/tests-251%20passing-brightgreen" alt="tests">
+    <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="deps">
+    <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license">
+  </div>
+</header>
+
+<section>
+  <h2>问题：你的 AI 项目可能正在违规</h2>
+  <p class="lead">2026 年 1 月 1 日，修订版《网络安全法》生效，罚款上限提到 <b>1000 万</b>，新增"责令关闭 App"。</p>
+  <div class="problem">
+    几乎每个国产 AI 应用都在调 OpenAI / Claude / Gemini。但只要你把用户的<b>身份证号、手机号、对话内容</b>发给境外大模型，在中国监管下这就是<b>数据出境</b>——敏感个人信息 1 万人即触发安全评估，重要数据一律不得无评估出境。2026 年已有 API 中转站站长因此被刑拘。<br><br>
+    问题是：<b>你的项目，现在到底踩了哪些线？</b>
+  </div>
+</section>
+
+<section>
+  <h2>30 秒，精确到「文件:行」</h2>
+  <p class="lead">零安装、只读、不上传任何数据。一行命令，给你一张可截图、可存档的体检报告。</p>
+  <div class="term"><span class="d">## 🔍 项目实测风险</span>
+🌐 数据出境风险: 2 ｜ 🔑 硬编码密钥: 3 ｜ 🪪 个人信息暴露: 2 ｜ 📂 .env 权限: 1
+
+<span class="r">- .env:2          境外大模型端点: OpenAI — 向其发送个人信息即构成数据出境</span>
+<span class="r">- package.json:12 境外大模型 SDK 依赖: @anthropic-ai/sdk — 项目内含出境通道</span>
+<span class="r">- src/config.ts:3 硬编码 GitHub Token: ghp_12*** — 凭据不应写入源码</span>
+<span class="y">- customers.csv:2 手机号 13912*** — 个人信息出现在文件中，需评估脱敏</span>
+
+<span class="b">合规得分: 63/100  [C]</span>   <span class="g">🟢 8</span> ｜ <span class="y">🟡 3</span> ｜ <span class="r">🔴 1</span> ｜ ⚪ 2</div>
+</section>
+
+<section>
+  <h2>不止诊断，还给处方</h2>
+  <p class="lead">扫到境外模型后，直接告诉你换成哪个境内已备案模型——多数是 OpenAI 兼容接口，<b>改个 base_url 就合规</b>。</p>
+  <table>
+    <thead><tr><th>境内模型</th><th>厂商</th><th>OpenAI 兼容 base_url</th></tr></thead>
+    <tbody>
+      <tr><td>通义千问</td><td>阿里云百炼</td><td><code>dashscope.aliyuncs.com/compatible-mode/v1</code></td></tr>
+      <tr><td>DeepSeek</td><td>深度求索</td><td><code>api.deepseek.com</code></td></tr>
+      <tr><td>Kimi</td><td>月之暗面</td><td><code>api.moonshot.cn/v1</code></td></tr>
+      <tr><td>智谱 GLM</td><td>智谱 AI</td><td><code>open.bigmodel.cn/api/paas/v4</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>能力</h2>
+  <div class="grid">
+    <div class="card"><h3>🌐 数据出境检测</h3><p>识别境外大模型端点与 SDK 依赖（openai/anthropic/gemini…）——中国独有、英文工具没有的概念。</p></div>
+    <div class="card"><h3>🪪 中文 PII</h3><p>身份证（GB11643 校验）、银行卡（Luhn）、运营商手机号，配合 PIPL 敏感个人信息识别。</p></div>
+    <div class="card"><h3>📋 合规评分卡</h3><p>映射网安法/PIPL/等保2.0/数据出境/AI标识，红黄绿评分，发现驱动。</p></div>
+    <div class="card"><h3>📄 报告导出</h3><p><code>--html</code> 生成可打印成 PDF 的专业报告，供等保/PIPL 备案与审计存档。</p></div>
+    <div class="card"><h3>🔒 运行时防护</h3><p>MCP / 插件 / SDK 接入，拦截提示注入、危险命令、数据外泄与 MCP 工具投毒。</p></div>
+    <div class="card"><h3>⚙️ CI 门禁</h3><p>GitHub Action 一行接入，PR 自动合规扫描，发现 critical 直接拦构建。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>为什么可以放心用</h2>
+  <div class="trust">
+    <div><div class="big">零上传</div>纯本地只读，代码不出本机</div>
+    <div><div class="big">零依赖</div>可在信创/私有化/离线环境直接跑</div>
+    <div><div class="big">开源</div>Apache-2.0，代码全公开</div>
+    <div><div class="big">中文优先</div>为中文语境与中国监管而生</div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>现在就试</h2>
+  <p class="lead">在你的 AI 项目根目录运行：</p>
+  <div style="text-align:center"><div class="cmd" style="display:inline-flex">npx shellward scan</div></div>
+  <p style="margin-top:24px">
+    <a class="btn" href="https://github.com/jnMetaCode/shellward">GitHub ⭐ Star</a>
+    <a class="btn alt" href="https://www.npmjs.com/package/shellward">npm</a>
+  </p>
+</section>
+
+<footer>
+  公众号「AI不止语」· 技术问答 · 项目更新 · 实战文章<br>
+  ShellWard · Apache-2.0 · <a href="https://github.com/jnMetaCode/shellward">github.com/jnMetaCode/shellward</a>
+</footer>
+
+</div>
+</body>
+</html>
