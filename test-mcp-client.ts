@@ -46,7 +46,7 @@ async function main() {
       command: 'node', args: ['--import', 'tsx', 'src/mcp-server.ts'],
       source: 'test',
     }, 15000)
-    test('tools/list 返回 8 个工具', tools.length === 8, `got ${tools.length}`)
+    test('tools/list 返回 9 个工具', tools.length === 9, `got ${tools.length}`)
     // ShellWard's own tool descriptions must not trip its own poisoning scan.
     const flagged = tools.filter(t => !guard.scanToolDefinition(t).safe).map(t => t.name)
     test('ShellWard 自身工具全部自检通过', flagged.length === 0, `flagged: ${flagged.join(', ')}`)

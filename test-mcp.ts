@@ -25,9 +25,9 @@ const tests: TestCase[] = [
   },
   {
     id: 2,
-    name: 'tools/list returns 8 tools',
+    name: 'tools/list returns 9 tools',
     request: { method: 'tools/list', params: {} },
-    validate: (r) => r.result?.tools?.length === 8,
+    validate: (r) => r.result?.tools?.length === 9,
   },
   {
     id: 3,
@@ -157,7 +157,7 @@ const tests: TestCase[] = [
     },
   },
   {
-    id: 12,
+    id: 16,
     name: 'compliance_check returns scorecard report',
     request: { method: 'tools/call', params: { name: 'compliance_check', arguments: {} } },
     validate: (r) => {
@@ -166,7 +166,7 @@ const tests: TestCase[] = [
     },
   },
   {
-    id: 13,
+    id: 17,
     name: 'compliance_check json format returns score',
     request: { method: 'tools/call', params: { name: 'compliance_check', arguments: { format: 'json' } } },
     validate: (r) => {
