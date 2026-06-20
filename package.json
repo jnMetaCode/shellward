@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.7.13",
+  "version": "0.7.14",
   "mcpName": "io.github.jnMetaCode/shellward",
   "description": "AI agent security & MCP security middleware — prompt injection detection, AI firewall, runtime guardrails & data-loss prevention for LLM tool calls. 8-layer defense against data exfiltration & dangerous commands. Zero dependencies. SDK + OpenClaw plugin. Supports LangChain, AutoGPT, Claude Code, Cursor, OpenAI Agents, Hermes Agent.",
   "keywords": [
@@ -57,7 +57,7 @@
   "scripts": {
     "build": "tsc",
     "mcp": "npx tsx src/mcp-server.ts",
-    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-rugpull.ts && npx tsx test-redos.ts && npx tsx test-mcp-client.ts && npx tsx test-mcp.ts && npx tsx test-compliance.ts && npx tsx test-web.ts",
+    "test": "npx tsx test-sdk.ts && npx tsx test-integration.ts && npx tsx test-edge-cases.ts && npx tsx test-rugpull.ts && npx tsx test-redos.ts && npx tsx test-mcp-client.ts && npx tsx test-mcp.ts && npx tsx test-compliance.ts && npx tsx test-web.ts && npx tsx test-init.ts",
     "test:redos": "npx tsx test-redos.ts",
     "test:compliance": "npx tsx test-compliance.ts",
     "test:integration": "npx tsx test-integration.ts",
@@ -66,7 +66,8 @@
     "test:mcp": "npx tsx test-mcp.ts",
     "bench": "npx tsx bench/run.ts",
     "bench:scan": "npx tsx bench/scan-bench.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test:init": "npx tsx test-init.ts"
   },
   "openclaw": {
     "extensions": [

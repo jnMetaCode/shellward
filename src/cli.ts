@@ -18,6 +18,7 @@ import { ShellWard } from './core/engine.js'
 import { runProjectComplianceAudit } from './compliance/audit.js'
 import { renderComplianceReport, renderProjectFindings } from './compliance/report.js'
 import { renderHtmlReport } from './compliance/html-report.js'
+import { runInit } from './init.js'
 import { resolveLocale } from './types.js'
 
 const argv = process.argv.slice(2)
@@ -33,6 +34,11 @@ async function main() {
   if (cmd === 'mcp') {
     // 转发到 MCP 服务器（import 即启动 stdio 循环）
     await import('./mcp-server.js')
+    return
+  }
+
+  if (cmd === 'init') {
+    runInitCommand(argv.includes('--dry-run'))
     return
   }
 
@@ -163,6 +169,30 @@ function runScan(args: string[]) {
   }
 }
 
+/** `shellward init`：把 ShellWard 接入已安装 AI 工具的 MCP 配置（运行时防护） */
+function runInitCommand(dryRun: boolean): void {
+  const out = runInit({ dryRun })
+  console.log('\n🔌 ShellWard 接入 AI 工具运行时防护' + (dryRun ? '（预览，不写入）' : '') + '\n')
+  const ICON: Record<string, string> = { added: '✅', updated: '✅', unchanged: '✔️', skipped: '·', error: '⚠️' }
+  let touched = 0
+  for (const o of out) {
+    const label = { added: '已接入', updated: '已更新', unchanged: '已接入(无变化)', skipped: '跳过', error: '失败' }[o.result]
+    if (o.result === 'added' || o.result === 'updated') touched++
+    console.log(`  ${ICON[o.result] || '·'} ${o.name} — ${label}${o.detail ? '：' + o.detail : ''}`)
+    if (o.result !== 'skipped') console.log(`      ${o.path}`)
+  }
+  console.log('')
+  if (dryRun) {
+    console.log('这是预览。去掉 --dry-run 实际接入。')
+  } else if (touched > 0) {
+    console.log('✅ 已接入。请重启对应的 AI 工具，ShellWard 即作为运行时防护生效（拦注入/外泄/危险命令）。')
+    console.log('   验证：在工具里问"调用 shellward 的 security_status"。原配置已备份为 *.shellward.bak。')
+  } else {
+    console.log('未发现可接入的已安装 AI 工具配置。也可手动加 MCP：')
+    console.log('   {"mcpServers":{"shellward":{"command":"npx","args":["-y","-p","shellward","shellward-mcp"]}}}')
+  }
+}
+
 /** 跨平台在默认浏览器打开 URL 或本地文件（失败静默，不影响主流程） */
 function openBrowser(target: string): void {
   const cmd = process.platform === 'darwin' ? 'open'
@@ -199,6 +229,7 @@ Usage:
   shellward scan --serve   Scan and serve the report at http://localhost (local)
   shellward web [port]     Web scanner for public repo URLs (deploy this)
   shellward web --local    Local web GUI: scan a local path (private, no upload)
+  shellward init           Install ShellWard into your AI tools (MCP runtime guard)
   shellward mcp            Start MCP server (stdio)
   shellward --help
 
@@ -217,6 +248,7 @@ PII in files, .env permissions. Maps to CSL / PIPL / MLPS / cross-border / label
   shellward scan --serve    扫描并在 http://localhost 提供报告（本地服务）
   shellward web [端口]       公开仓库 web 扫描器（贴 URL 体检，用于部署）
   shellward web --local     本地 web GUI：填本地路径扫描（私有、不上传，客户端体验）
+  shellward init            一键接入你的 AI 工具（MCP 运行时防护，--dry-run 预览）
   shellward mcp             启动 MCP 服务器（stdio）
   shellward --help
 

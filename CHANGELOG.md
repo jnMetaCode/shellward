@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.14] - 2026-06-21
+
+### Added — `shellward init`：一键接入运行时防护（打通"扫描→运行时"漏斗）
+- **`npx shellward init`**：自动探测已安装的 AI 工具（Claude Desktop / Cursor / Claude Code / Windsurf），把 ShellWard 作为 **MCP 运行时防护**安全地加入其配置——改前备份(`.shellward.bak`)、合并不覆盖其它 MCP 服务器、未安装的工具自动跳过、`--dry-run` 预览
+- 这是「安装按钮」的正确形态：只对已知配置文件操作、可预览、可回滚。把那些"待核验"的运行时合规项变成"接入即可验证"
+- `src/init.ts`（纯合并逻辑可测）+ `test-init.ts`（12 项）；全套 **315 测试**全绿
+
 ## [0.7.13] - 2026-06-21
 
 ### Changed — 数据出境改为「需评估」+ 报告内置「接入运行时」指引
