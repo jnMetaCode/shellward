@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.7] - 2026-06-20
+
+### Fixed — 真实项目扫描的两个问题（用户实测发现）
+- **跳过构建产物**：新增跳过 `release/`/`releases/`、`*.app`/`*.framework`/`*.bundle` 等打包目录——此前会扫进 Electron 打包的 `*.app` 里重复的 package.json，造成重复发现 + 超长路径
+- **修复长路径压坏报告表格**：超长文件路径曾把"说明/严重度"列挤成竖排单字；改为路径可换行 (`word-break`) + 固定列宽
+- 实测 agency-orchestrator：去噪后 11 个数据出境点均落在真实源码 + 1 个真实手机号泄露（输出文件），无构建产物噪声
+
 ## [0.7.6] - 2026-06-20
 
 ### Added — 让"检查过程"可见（回应"秒出=没检查吗"）

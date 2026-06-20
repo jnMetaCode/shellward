@@ -321,8 +321,12 @@ section,.reg{padding:0 36px}
 .tbl .muted{color:var(--muted)}
 .tbl .faint{color:var(--faint);font-size:13px}
 .loc code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-  background:#f1f5f9;color:#0f172a;padding:2px 7px;border-radius:5px;white-space:nowrap}
+  background:#f1f5f9;color:#0f172a;padding:2px 7px;border-radius:5px;
+  white-space:normal;word-break:break-all;overflow-wrap:anywhere}
 .alts th:first-child,.alts td:first-child{width:120px}
+/* 发现表三列布局：位置≤40% 可换行、说明占主、严重度窄列不挤 */
+table.tbl td.loc{width:34%;max-width:300px}
+table.tbl td.right{width:64px}
 
 /* severity 标签 */
 .sev{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px}
