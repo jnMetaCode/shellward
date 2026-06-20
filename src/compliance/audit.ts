@@ -57,6 +57,10 @@ export interface ComplianceReport {
   generatedAt: string
   /** 项目实测风险造成的扣分（仅项目体检路径）；0 表示纯控制项评分 */
   projectPenalty?: number
+  /** 是否为静态扫描（未部署运行时）：此时多数控制项不可验证，得分不代表完整合规 */
+  staticScan?: boolean
+  /** 项目扫描的文件总数（静态扫描路径） */
+  filesScanned?: number
 }
 
 /** 层能力映射：控制项 id → 必须启用的层（全部启用才 pass，部分启用 warn，全关 fail） */
@@ -191,6 +195,8 @@ export function runProjectComplianceAudit(config: ShellWardConfig, root: string)
     report.grade = gradeOf(report.score)
     report.projectPenalty = penalty
   }
+  report.staticScan = true
+  report.filesScanned = scan.filesScanned
 
   return { report, scan }
 }

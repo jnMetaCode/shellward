@@ -358,6 +358,42 @@ console.log('\n--- web 扫描器 URL 校验 ---')
   test('命令注入字符 → 拒绝', !ok('https://github.com/a/b;rm -rf'))
 }
 
+// === 13. Markdown 文档扫描策略 + 诚实静态评分 ===
+console.log('\n--- Markdown 策略 + 诚实评分 ---')
+{
+  const dir = mkdtempSync(join(tmpdir(), 'sw-md-'))
+  try {
+    // README 文档里的示例密钥/PII 不应误报；但 .md 里真实境外端点应报
+    writeFileSync(join(dir, 'README.md'),
+      '示例: password: MyP@ssw0rd123  手机 13912345678  SSN 123-45-6789\n调用 https://api.openai.com/v1\n')
+    // 真实代码文件里的密钥仍要报
+    writeFileSync(join(dir, 'app.ts'), 'const k="sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq"\n')
+    const scan = scanProject(dir)
+    const mdSecret = scan.findings.some(f => f.file === 'README.md' && (f.kind === 'secret' || f.kind === 'pii'))
+    test('Markdown 文档示例密钥/PII 不误报', !mdSecret)
+    test('Markdown 里真实境外端点仍检出', scan.findings.some(f => f.file === 'README.md' && f.kind === 'overseas'))
+    test('代码文件密钥仍检出', scan.findings.some(f => f.file === 'app.ts' && f.kind === 'secret'))
+    test('被扫描文件数包含 .md', scan.filesScanned >= 2)
+
+    // 诚实静态评分：不报"优秀"，标记 staticScan
+    const { report } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    test('体检标记 staticScan', report.staticScan === true)
+    test('体检记录 filesScanned', (report.filesScanned ?? 0) >= 2)
+    const html = renderHtmlReport(report, scan, 'zh', { root: dir })
+    test('HTML 不含"优秀"误导词', !html.includes('优秀'))
+    test('HTML 含静态扫描诚实声明', html.includes('本次为静态扫描') && html.includes('未验证'))
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+
+  // 干净项目静态扫描：HTML 应显示"未发现可观测风险"而非"优秀"
+  const clean = mkdtempSync(join(tmpdir(), 'sw-cl2-'))
+  try {
+    writeFileSync(join(clean, 'index.js'), 'console.log("hi")\n')
+    const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, clean)
+    const html = renderHtmlReport(report, scan, 'zh', { root: clean })
+    test('干净静态扫描 HTML 显示"未发现可观测风险"', html.includes('未发现可观测风险'))
+  } finally { rmSync(clean, { recursive: true, force: true }) }
+}
+
 // === 总结 ===
 console.log(`\n========== 结果: ${passed} 通过, ${failed} 失败 ==========\n`)
 if (failed > 0) process.exit(1)

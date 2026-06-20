@@ -23,8 +23,8 @@ import { renderHtmlReport } from '../compliance/html-report.js'
 import { DEFAULT_CONFIG, resolveLocale } from '../types.js'
 
 const REPO_RE = /^https:\/\/(github\.com|gitlab\.com|gitee\.com|bitbucket\.org)\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?(?:\.git)?\/?$/
-const CLONE_TIMEOUT_MS = 30_000
-const MAX_CONCURRENT = 2
+const CLONE_TIMEOUT_MS = 60_000
+const MAX_CONCURRENT = 4
 
 export interface WebServerOptions {
   port: number
@@ -105,7 +105,10 @@ async function handleRepo(res: any, repo: string, locale: 'zh' | 'en', inc: () =
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
     send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: v.url }))
   } catch (e: any) {
-    send(res, 502, 'text/html', errorPage('克隆/扫描失败：' + esc(e?.message || String(e)) + '。请确认是可公开访问的仓库。'))
+    const msg = esc(e?.message || String(e))
+    send(res, 502, 'text/html', errorPage(
+      `克隆/扫描失败：${msg}。<br><br>可能原因：仓库过大（克隆超时 60s）、私有仓库、或地址有误。<br>` +
+      `<b>大仓库 / 私有代码请用本地客户端</b>（选文件夹、不上传）：<code>npx shellward web --local</code>，或命令行 <code>npx shellward scan</code>。`))
   } finally {
     dec()
     try { rmSync(dir, { recursive: true, force: true }) } catch { /* ignore */ }
@@ -197,11 +200,11 @@ function send(res: any, code: number, type: string, body: string) {
 
 function formPage(local: boolean): string {
   const urlForm = `
-      <form action="/scan" method="get">
+      <form action="/scan" method="get" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='扫描中…（大仓库需 10–60 秒，请勿重复点击）';">
         <label>${local ? '② ' : ''}公开仓库地址</label>
         <input name="repo" placeholder="https://github.com/owner/repo"${local ? '' : ' autofocus'}>
         <button type="submit">${local ? '体检该仓库 →' : '开始体检 →'}</button>
-        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。${local ? '' : '<b>私有/敏感代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
+        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时改用上方「选择文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
       </form>`
 
   const uploadForm = local ? `

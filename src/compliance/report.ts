@@ -41,20 +41,37 @@ export function renderComplianceReport(report: ComplianceReport, locale: 'zh' | 
   const bar = scoreBar(report.score)
   L.push(zh ? '## 总评' : '## Overall')
   L.push('')
-  L.push(`**${zh ? '合规得分' : 'Score'}: ${report.score}/100　${gradeBadge(report.grade)}**`)
-  L.push('')
-  L.push('```')
-  L.push(`${bar}  ${report.score}/100  [${report.grade}]`)
-  L.push('```')
+  // 诚实原则：静态扫描下不报"优秀/A"式合规结论，以风险发现数为主指标
+  if (report.staticScan) {
+    const fn = report.failed + (report.projectPenalty ? 1 : 0)
+    L.push(zh
+      ? `**项目实测风险: ${report.failed === 0 && !report.projectPenalty ? '🟢 未发现可观测风险' : '🔴 发现风险，详见下方'}**`
+      : `**Observable risk: ${report.failed === 0 && !report.projectPenalty ? '🟢 none found' : '🔴 see below'}**`)
+    L.push('')
+    L.push(`${bar}  ${report.score}/100 ${zh ? '（可观测合规项，仅供参考）' : '(observable controls only)'}`)
+    void fn
+  } else {
+    L.push(`**${zh ? '合规得分' : 'Score'}: ${report.score}/100　${gradeBadge(report.grade)}**`)
+    L.push('')
+    L.push('```')
+    L.push(`${bar}  ${report.score}/100  [${report.grade}]`)
+    L.push('```')
+  }
   L.push('')
   L.push(zh
-    ? `🟢 合规 ${report.passed} ｜ 🟡 部分 ${report.warned} ｜ 🔴 不合规 ${report.failed} ｜ ⚪ 待确认 ${report.manual}　(共 ${report.total} 项)`
-    : `🟢 Pass ${report.passed} ｜ 🟡 Partial ${report.warned} ｜ 🔴 Fail ${report.failed} ｜ ⚪ Manual ${report.manual}　(${report.total} controls)`)
+    ? `🟢 合规 ${report.passed} ｜ 🟡 部分 ${report.warned} ｜ 🔴 不合规 ${report.failed} ｜ ⚪ 待核验 ${report.manual}　(共 ${report.total} 项)`
+    : `🟢 Pass ${report.passed} ｜ 🟡 Partial ${report.warned} ｜ 🔴 Fail ${report.failed} ｜ ⚪ Review ${report.manual}　(${report.total} controls)`)
   if (report.projectPenalty && report.projectPenalty > 0) {
     L.push('')
     L.push(zh
       ? `> 含项目实测风险扣分 **-${report.projectPenalty}**（见下方「项目实测风险」）`
       : `> Includes **-${report.projectPenalty}** from project scan findings (see Project Scan Findings)`)
+  }
+  if (report.staticScan) {
+    L.push('')
+    L.push(zh
+      ? `> ⚠ 本次为静态扫描：已检查 ${report.filesScanned ?? '?'} 个文件，仅评估可观测风险；**${report.manual} 项合规控制项未验证**（需部署 ShellWard 运行时或人工核验）。本报告不构成完整合规结论。`
+      : `> ⚠ Static scan: ${report.filesScanned ?? '?'} files checked; **${report.manual} controls unverified**. Not a complete compliance verdict.`)
   }
   L.push('')
 

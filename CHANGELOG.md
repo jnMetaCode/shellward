@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.2] - 2026-06-20
+
+### Changed — 诚实度与真实覆盖（用户反馈"上传就出结果太假"后修正）
+- **静态扫描不再报"优秀/A"式合规结论**：以「项目实测风险」为主指标（未发现/发现 N 项），得分降为"可观测项"次要参考，并明确标注「X 项合规控制项未验证、非完整合规结论」（终端 + HTML 一致）
+- **扫描 `.md`/`.mdx`/`.ipynb` 等**：此前完全跳过 markdown，导致 prompt/skill 类项目"没真扫到正文"。现纳入扫描（superpowers-zh 扫描文件数 74→150）
+- **Markdown 文档只检测境外端点、跳过密钥/PII 模式**：避免把 README「检测示例」里的演示密钥/SSN 误报为真实风险（ShellWard 自扫从误报回到 0）
+- **Web URL 扫描健壮性**：克隆超时 30s→60s、并发 2→4、大仓库/超时给友好提示（引导用本地客户端选文件夹）、URL 表单加"扫描中"状态防重复点击导致 503
+- `test-compliance.ts` 扩至 94 项；全套 **282 测试**全绿
+
 ## [0.7.1] - 2026-06-20
 
 ### Changed — 本地客户端 UX：选文件夹上传（不再手敲路径）

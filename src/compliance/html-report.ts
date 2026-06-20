@@ -60,25 +60,37 @@ export function renderHtmlReport(
   const S: string[] = []
 
   // ===== 评分 Hero =====
+  // 诚实原则：静态扫描下多数控制项不可验证，不展示"优秀/A"式合规结论，
+  // 改以「风险发现数」为主指标，得分仅作"可观测项"的次要参考。
+  const findingsN = scan.findings.length
+  const gradeLabel = report.staticScan ? t('可观测项', 'observable') : t(g.zh, g.en)
+  const verdict = report.staticScan
+    ? (findingsN === 0
+        ? { txt: t('未发现可观测风险', 'No observable risks'), c: '#16a34a', ic: '🟢' }
+        : { txt: t(`发现 ${findingsN} 项风险`, `${findingsN} risk(s) found`), c: '#dc2626', ic: '🔴' })
+    : { txt: t(g.zh, g.en), c: g.color, ic: '' }
+
   S.push(`
   <section class="hero">
     <div class="gauge" style="--p:${report.score};--c:${g.color}">
       <div class="gauge-in">
         <div class="gscore">${report.score}<small>/100</small></div>
-        <div class="ggrade" style="color:${g.color}">${esc(report.grade)} · ${t(g.zh, g.en)}</div>
+        <div class="ggrade" style="color:${g.color}">${esc(report.grade)} · ${esc(gradeLabel)}</div>
       </div>
     </div>
     <div class="hero-side">
+      <div class="verdict" style="--vc:${verdict.c}">${verdict.ic} ${esc(verdict.txt)}</div>
       <div class="stat-row">
         ${stat('pass', '🟢', t('合规', 'Pass'), report.passed)}
         ${stat('warn', '🟡', t('部分', 'Partial'), report.warned)}
         ${stat('fail', '🔴', t('不合规', 'Fail'), report.failed)}
-        ${stat('manual', '⚪', t('待确认', 'Review'), report.manual)}
+        ${stat('manual', '⚪', t('待核验', 'Review'), report.manual)}
       </div>
       ${report.projectPenalty ? `<div class="penalty">⚠ ${t('含项目实测风险扣分', 'Includes project-scan penalty')} <b>−${report.projectPenalty}</b></div>` : ''}
-      <p class="hero-note">${t(
-        '得分基于本次可静态观测的项目风险。⚪ 待确认项需把 ShellWard 部署为运行时防护或人工核验。',
-        'Score reflects statically-observable project risk. ⚪ items need runtime deployment or manual review.')}</p>
+      <p class="hero-note">${report.staticScan
+        ? t(`⚠ 本次为静态扫描：已检查 ${report.filesScanned ?? scan.filesScanned} 个文件，仅评估可观测风险。<b>${report.manual} 项合规控制项未验证</b>（需部署 ShellWard 运行时或人工核验）——本报告不构成完整合规结论，得分仅供参考。`,
+            `⚠ Static scan: checked ${report.filesScanned ?? scan.filesScanned} files for observable risk only. <b>${report.manual} controls unverified</b> — not a complete compliance verdict.`)
+        : t('得分基于已部署运行时的合规评估。', 'Score based on deployed-runtime assessment.')}</p>
     </div>
   </section>`)
 
@@ -263,6 +275,7 @@ section,.reg{padding:0 36px}
 .gscore small{font-size:15px;font-weight:500;color:var(--faint)}
 .ggrade{font-size:14px;font-weight:700;margin-top:6px}
 .hero-side{flex:1;min-width:0}
+.verdict{font-size:17px;font-weight:800;color:var(--vc);margin:0 0 12px}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center}
 .stat .sn{font-size:22px;font-weight:800;line-height:1}
