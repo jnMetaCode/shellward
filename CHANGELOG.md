@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.9] - 2026-06-20
+
+### Changed — HTML 报告视觉重做（专业 UI）
+- **环形评分仪表**（conic-gradient，按等级着色）替代原扁平数字
+- **语义化状态药丸**（合规/部分/不合规/待确认）+ **severity 彩色标签**（严重/高/中）
+- **卡片化法规分组**（每组带 pass/fail 迷你计数）、概览 chips、统计卡
+- 品牌色克制使用、清晰层级、表格 hover、移动端响应式、打印优化
+- 顾问态（⚪）文案弱化处理，降低视觉噪声；自包含、零依赖不变
+
 ## [0.6.8] - 2026-06-20
 
 ### Added — 本地 web 视图（方便看，数据不出本机）
