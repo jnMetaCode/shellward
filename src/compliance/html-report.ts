@@ -164,7 +164,12 @@ export function renderHtmlReport(
 
   // ===== 控制项明细 =====
   S.push(sectionHead('📋', t('合规控制项明细', 'Compliance Controls'),
-    t('按法规分组；⚪ 项为运行时/人工核验', 'By regulation; ⚪ = runtime / manual review')))
+    t('按法规分组', 'By regulation')))
+  if (report.staticScan && report.manual > 0) {
+    S.push(`<div class="note manual-note">${t(
+      `<b>⚪ 待核验 ≠ 不合规。</b> 下方 ${report.manual} 项是<b>运行时合规控制</b>（审计留存、内容过滤、注入拦截、数据外发管控等）——靠"看代码"的静态扫描判断不了，需把 ShellWard 接入你的 AI 应用（<code>npx shellward mcp</code> 或插件）作为运行时防护后才能验证，或人工核验。每项后面是"该做什么"。`,
+      `<b>⚪ Review ≠ non-compliant.</b> The ${report.manual} items below are <b>runtime controls</b> a static scan cannot verify — deploy ShellWard as a runtime guard (<code>npx shellward mcp</code> / plugin) to validate them. Each row shows the remediation.`)}</div>`)
+  }
   const grouped = groupBy(report.results)
   for (const reg of REG_ORDER) {
     const items = grouped[reg]
@@ -349,6 +354,9 @@ table.tbl td.right{width:64px}
 .mtag.mid{background:var(--warn-bg);color:var(--warn)}
 .note{margin:8px 36px 4px;font-size:12.5px;color:var(--muted);background:#f8fafc;
   border-left:3px solid var(--brand);padding:10px 14px;border-radius:0 8px 8px 0}
+.manual-note{margin:8px 36px 12px;font-size:13px;color:#475569;background:#eff6ff;
+  border-left:3px solid #3b82f6;line-height:1.6}
+.manual-note code{background:#dbeafe;padding:1px 6px;border-radius:5px}
 
 /* 法规分组 */
 .reg{margin:14px 36px;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}

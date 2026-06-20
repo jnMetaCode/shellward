@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.9] - 2026-06-20
+
+### Changed — 「待确认」不再啰嗦/吓人
+- 静态扫描的 ⚪ 待核验项**不再每行重复**"ShellWard 运行时可提供…静态扫描无法验证"长句（此前 12 行同一句）
+- 改为在「合规控制项明细」区块**开头统一说明一次**：**⚪ 待核验 ≠ 不合规**，它们是运行时合规控制（审计留存/内容过滤/注入拦截/数据外发管控），静态扫描判断不了，需部署 ShellWard 运行时或人工核验
+- 每个 ⚪ 行只保留"该做什么"（整改建议），更清爽
+- HTML 报告加蓝色说明条；终端/markdown 同步
+
 ## [0.7.8] - 2026-06-20
 
 ### Changed — 本地客户端改用「目录浏览器」，彻底解决上传 3 万文件的问题

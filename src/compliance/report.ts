@@ -93,6 +93,12 @@ export function renderComplianceReport(report: ComplianceReport, locale: 'zh' | 
   // ===== 按法规分组明细 =====
   L.push(zh ? '## 分项明细' : '## Detailed Results')
   L.push('')
+  if (report.staticScan && report.manual > 0) {
+    L.push(zh
+      ? `> **⚪ 待核验 ≠ 不合规。** 下方 ${report.manual} 项是**运行时合规控制**（审计留存、内容过滤、注入拦截、数据外发管控等），静态扫描（看代码）判断不了，需把 ShellWard 接入你的 AI 应用（\`npx shellward mcp\` 或插件）作为运行时防护后验证，或人工核验。`
+      : `> **⚪ Review ≠ non-compliant.** The ${report.manual} items below are runtime controls a static scan cannot verify — deploy ShellWard as a runtime guard to validate.`)
+    L.push('')
+  }
 
   const grouped = groupByRegulation(report.results)
   for (const reg of REGULATION_ORDER) {

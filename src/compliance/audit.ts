@@ -212,11 +212,10 @@ function computeProjectPenalty(scan: ProjectScanResult): number {
 }
 
 function checkControl(c: ComplianceControl, config: ShellWardConfig, env: EnvFacts, deployed: boolean): ControlResult {
-  // 静态扫描（未部署运行时）下，能力层/审计日志类控制项无法验证 —— 标为顾问态，绝不虚报"已合规"
+  // 静态扫描（未部署运行时）下，能力层/审计日志类控制项无法验证 —— 标为顾问态，绝不虚报"已合规"。
+  // 「为何待核验」统一在报告区块开头说一次；这里每行只留"该做什么"，避免 12 行重复同一句。
   if (!deployed && (c.method === 'capability' || c.method === 'config' || c.method === 'audit')) {
-    return mk(c, 'manual',
-      `ShellWard 运行时可提供此防护；当前为静态扫描、未部署，无法验证。整改：${c.remediation_zh}`,
-      `Provided by ShellWard runtime; not verifiable in a static scan. ${c.remediation_en}`)
+    return mk(c, 'manual', c.remediation_zh, c.remediation_en)
   }
   switch (c.method) {
     case 'capability': return checkCapability(c, config)
