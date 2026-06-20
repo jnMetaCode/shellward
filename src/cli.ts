@@ -36,6 +36,14 @@ async function main() {
     return
   }
 
+  if (cmd === 'web') {
+    const { startWebServer } = await import('./web/scan-server.js')
+    const local = argv.includes('--local')
+    const portArg = flagValue(argv, '--port') || argv.slice(1).find(a => /^\d+$/.test(a))
+    startWebServer({ port: Number(portArg) || 8080, local })
+    return
+  }
+
   if (cmd === 'scan') {
     runScan(argv.slice(1))
     return
@@ -189,6 +197,8 @@ Usage:
   shellward scan --html f  Export a self-contained HTML report (print to PDF)
   shellward scan --open    Scan and open the report in your browser (local)
   shellward scan --serve   Scan and serve the report at http://localhost (local)
+  shellward web [port]     Web scanner for public repo URLs (deploy this)
+  shellward web --local    Local web GUI: scan a local path (private, no upload)
   shellward mcp            Start MCP server (stdio)
   shellward --help
 
@@ -205,6 +215,8 @@ PII in files, .env permissions. Maps to CSL / PIPL / MLPS / cross-border / label
   shellward scan --html 文件 导出自包含 HTML 报告（浏览器可打印成 PDF）
   shellward scan --open     扫描并在浏览器打开报告（本地，方便看）
   shellward scan --serve    扫描并在 http://localhost 提供报告（本地服务）
+  shellward web [端口]       公开仓库 web 扫描器（贴 URL 体检，用于部署）
+  shellward web --local     本地 web GUI：填本地路径扫描（私有、不上传，客户端体验）
   shellward mcp             启动 MCP 服务器（stdio）
   shellward --help
 

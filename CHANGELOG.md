@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-06-20
+
+### Added — Web 扫描器 / 客户端（双模式，一套代码）
+- **`shellward web [port]`（公网模式）**：网页贴「公开仓库 URL」或访问 `/scan?repo=URL` 链接 → 服务端浅克隆 + 扫描 + 出报告。公开仓库代码本就公开，不涉数据出境
+- **`shellward web --local`（客户端模式，仅 127.0.0.1）**：浏览器 GUI 填本地路径扫描，私有代码不上传、不出本机——零 Electron 的「客户端」体验
+- 安全加固：域名白名单（github/gitlab/gitee/bitbucket）、严格 URL 正则（拒凭据/注入字符）、浅克隆 `--depth 1` + `GIT_TERMINAL_PROMPT=0` + 30s 超时、临时目录用完即删、并发上限、**绝不执行仓库代码**、**公网模式禁止本地路径扫描**
+- 附 `Dockerfile`，可一键部署到任意容器平台
+- `test-compliance.ts` 扩至 85 项（含 10 项 URL 安全校验）；全套 **273 测试**全绿
+
 ## [0.6.9] - 2026-06-20
 
 ### Changed — HTML 报告视觉重做（专业 UI）

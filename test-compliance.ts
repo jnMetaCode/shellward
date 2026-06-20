@@ -12,6 +12,7 @@ import type { EnvFacts } from './src/compliance/audit'
 import { renderComplianceReport, renderProjectFindings } from './src/compliance/report'
 import { scanProject } from './src/compliance/project-scan'
 import { renderHtmlReport } from './src/compliance/html-report'
+import { validateRepoUrl } from './src/web/scan-server'
 import { suggestDomestic, DOMESTIC_MODELS } from './src/rules/domestic-alternatives'
 import { COMPLIANCE_CONTROLS } from './src/compliance/regulations'
 import { DEFAULT_CONFIG } from './src/types'
@@ -339,6 +340,22 @@ console.log('\n--- 部署/静态扫描上下文 ---')
     test('CLI 体检：能力项均为 manual（不虚报）',
       report.results.filter(r => r.control.method === 'capability').every(r => r.status === 'manual'))
   } finally { rmSync(dir, { recursive: true, force: true }) }
+}
+
+// === 12. web 扫描器 URL 校验（安全） ===
+console.log('\n--- web 扫描器 URL 校验 ---')
+{
+  const ok = (u: string) => validateRepoUrl(u).ok
+  test('github 公开仓库 → 通过', ok('https://github.com/openai/openai-quickstart-node'))
+  test('gitee .git 后缀 → 通过', ok('https://gitee.com/owner/repo.git'))
+  test('gitlab → 通过', ok('https://gitlab.com/owner/repo'))
+  test('非白名单域名 → 拒绝', !ok('https://evil.com/a/b'))
+  test('http(非https) → 拒绝', !ok('http://github.com/a/b'))
+  test('带凭据(@) → 拒绝', !ok('https://user:pw@github.com/a/b'))
+  test('空 → 拒绝', !ok(''))
+  test('含空格 → 拒绝', !ok('https://github.com/a /b'))
+  test('缺仓库名 → 拒绝', !ok('https://github.com/owner'))
+  test('命令注入字符 → 拒绝', !ok('https://github.com/a/b;rm -rf'))
 }
 
 // === 总结 ===

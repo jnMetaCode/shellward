@@ -8,7 +8,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-263%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-273%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 **🌐 官网: https://jnmetacode.github.io/shellward/**
@@ -38,6 +38,10 @@ npx shellward scan
 ```
 
 想在浏览器里看？`npx shellward scan --open`（扫完直接打开报告）或 `--serve`（本地 http://localhost 提供报告）——**数据全程不出本机**。
+
+**Web 扫描器 / 客户端（双模式）**：
+- `shellward web` — 公开仓库 web 扫描器：网页贴「公开仓库 URL」或用 `/scan?repo=URL` 链接体检（可部署，见 `Dockerfile`）。
+- `shellward web --local` — 本地 web GUI（客户端体验）：填本地路径扫描，**私有代码不上传、不出本机**，无需命令行。
 
 `--json` 供 CI · `--ci` 发现 critical 时让构建失败 · `--html report.html` 导出可打印成 PDF 的报告（备案/审计存档）· 也可作 [GitHub Action](#github-action-pr-compliance-gate) 接入 PR 门禁。
 
