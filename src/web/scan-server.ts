@@ -212,6 +212,7 @@ function formPage(local: boolean): string {
         <label>① 选择本地项目文件夹（推荐）</label>
         <input type="file" id="dir" webkitdirectory directory multiple>
         <button id="dbtn" type="submit">开始体检 →</button>
+        <div id="status" class="status"></div>
         <p class="hint">📂 直接选你的项目文件夹，无需敲路径。文件仅发送到<b>本机的本地服务</b>处理，<b>不经过任何外部服务器、不出本机</b>。</p>
       </form>
       <div class="or">— 或 —</div>` : ''
@@ -230,17 +231,20 @@ function formPage(local: boolean): string {
 }
 
 // 客户端：读取所选文件夹 → 过滤(跳过 node_modules 等、仅文本/配置、限大小) → POST 到本机服务
+// 注意：过滤后缀须与服务端 SCAN_EXT 对齐（含 .md），否则 markdown 项目会被全滤光显得"扫不了"。
 const UPLOAD_SCRIPT = `<script>
 (function(){
   var SKIP=/(^|\\/)(node_modules|\\.git|dist|build|\\.next|out|vendor|coverage|\\.venv|venv|__pycache__|target|\\.cache)(\\/|$)/;
-  var EXT=/\\.(ts|tsx|js|jsx|mjs|cjs|py|go|rb|java|php|rs|json|yaml|yml|toml|ini|conf|sh|txt|csv)$/i;
+  var EXT=/\\.(ts|tsx|js|jsx|mjs|cjs|py|go|rb|java|php|rs|json|yaml|yml|toml|ini|conf|sh|txt|csv|md|mdx|ipynb|properties|xml|gradle|tf)$/i;
   var ENV=/(^|\\/)\\.env(\\.|$)/; var DEP=/^(package\\.json|requirements\\.txt|pyproject\\.toml|go\\.mod)$/;
   var form=document.getElementById('dirform'); if(!form) return;
+  var statusEl=document.getElementById('status');
+  function s(m){ if(statusEl){statusEl.textContent=m;statusEl.style.display='block';} }
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     var inp=document.getElementById('dir'), btn=document.getElementById('dbtn');
-    if(!inp.files||!inp.files.length){alert('请先选择项目文件夹');return;}
-    btn.disabled=true; btn.textContent='读取中…';
+    if(!inp.files||!inp.files.length){ s('请先点上方按钮选择项目文件夹'); return; }
+    btn.disabled=true;
     var picked=[], total=0, root='';
     for(var i=0;i<inp.files.length;i++){
       var f=inp.files[i], rel=f.webkitRelativePath||f.name; if(!root)root=rel.split('/')[0];
@@ -251,13 +255,17 @@ const UPLOAD_SCRIPT = `<script>
       if(picked.length>=3000||total>8388608) break;
       total+=f.size; picked.push(f);
     }
-    if(!picked.length){alert('未找到可扫描的源码/配置文件');btn.disabled=false;btn.textContent='开始体检 →';return;}
-    btn.textContent='扫描中… ('+picked.length+' 个文件)';
+    if(!picked.length){ s('未找到可扫描的源码/配置文件（已自动跳过 node_modules、图片、超大文件）。请选含代码或配置的目录。'); btn.disabled=false; return; }
+    s('读取 '+picked.length+' 个文件…');
     var out=[]; for(var j=0;j<picked.length;j++){ try{ out.push({path:picked[j].webkitRelativePath||picked[j].name, content:await picked[j].text()}); }catch(_){} }
+    s('扫描中…（'+out.length+' 个文件，请稍候）');
     try{
       var resp=await fetch('/scan-files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({root:root,files:out})});
-      var html=await resp.text(); document.open(); document.write(html); document.close();
-    }catch(err){ alert('扫描失败: '+err); btn.disabled=false; btn.textContent='开始体检 →'; }
+      if(!resp.ok){ s('扫描失败：HTTP '+resp.status+'。请重试，或改用命令行 npx shellward scan。'); btn.disabled=false; return; }
+      var html=await resp.text();
+      // 用 Blob URL 跳转展示报告（比 document.write 可靠）
+      window.location.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+    }catch(err){ s('扫描失败：'+(err&&err.message||err)+'。请重试。'); btn.disabled=false; }
   });
 })();
 </script>`
@@ -291,6 +299,8 @@ button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;fo
 font-weight:700;cursor:pointer;margin-top:4px}button:hover{background:#a80000}
 button:disabled{background:#94a3b8;cursor:default}
 form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
+.status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
+color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
 .foot{margin:24px 0 0;font-size:12.5px;color:#94a3b8}.foot a,.back{color:#cb0000;text-decoration:none}
 .back{font-weight:600}
 </style></head><body>${body}</body></html>`

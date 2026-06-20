@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.5] - 2026-06-20
+
+### Fixed — web 客户端"扫不了"的真实 bug（用户反馈后修）
+- **客户端文件过滤未对齐服务端**：上传时漏掉 `.md`/`.mdx`/`.ipynb` 等，导致 markdown 为主的项目（如 prompt/skill 库）被全滤光、提示"未找到可扫描文件"。现与服务端 SCAN_EXT 对齐
+- **结果渲染从 `document.write` 改为 Blob URL 跳转**，更可靠（此前某些情况报告写不出、页面像卡住）
+- **加可见状态提示**：读取/扫描/失败都在页面显示（不再静默失败或只弹 alert）
+- 新增 `test-web.ts`（18 项端到端集成测试：上传扫描、本地路径、URL 校验、路径穿越防护、双模式权限），纳入 `npm test`
+- 全套 **300 测试**全绿
+
 ## [0.7.4] - 2026-06-20
 
 ### Added — 合规扫描检测基准（把"信我能检"变成"看数字"）
