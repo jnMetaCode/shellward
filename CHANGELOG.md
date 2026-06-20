@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] - 2026-06-20
+
+### Added — 扫描透明度（"秒出=干活了吗"的证据）
+- 报告显示**扫描耗时 + 应用的检测规则数**（如"已扫描 150 个文件 · 耗时 28ms · 应用 53 条检测规则"）——让"快"可被验证：正则匹配文本本就是毫秒级，快≠假
+### Fixed
+- 数据出境控制项不再把同一厂商列两次（端点命中 + SDK 依赖命中去重，不区分大小写）
+
 ## [0.7.2] - 2026-06-20
 
 ### Changed — 诚实度与真实覆盖（用户反馈"上传就出结果太假"后修正）

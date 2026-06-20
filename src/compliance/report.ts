@@ -141,8 +141,8 @@ export function renderProjectFindings(scan: ProjectScanResult, locale: 'zh' | 'e
   L.push(zh ? '## 🔍 项目实测风险' : '## 🔍 Project Scan Findings')
   L.push('')
   L.push(zh
-    ? `> 已扫描 ${scan.filesScanned} 个文件${scan.truncated ? '（已达上限，部分未扫）' : ''}`
-    : `> Scanned ${scan.filesScanned} files${scan.truncated ? ' (limit reached, partial)' : ''}`)
+    ? `> 已扫描 ${scan.filesScanned} 个文件${scan.truncated ? '（已达上限）' : ''} · 耗时 ${scan.durationMs ?? '?'}ms · 应用 ${scan.rulesChecked ?? '?'} 条检测规则`
+    : `> Scanned ${scan.filesScanned} files${scan.truncated ? ' (limit reached)' : ''} · ${scan.durationMs ?? '?'}ms · ${scan.rulesChecked ?? '?'} detection rules`)
   L.push('')
 
   if (scan.findings.length === 0) {

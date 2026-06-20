@@ -96,8 +96,8 @@ export function renderHtmlReport(
 
   // ===== 项目实测风险 =====
   S.push(sectionHead('🔍', t('项目实测风险', 'Project Scan Findings'),
-    t(`已扫描 ${scan.filesScanned} 个文件${scan.truncated ? '（已达上限）' : ''}`,
-      `Scanned ${scan.filesScanned} files${scan.truncated ? ' (limit reached)' : ''}`)))
+    t(`已扫描 ${scan.filesScanned} 个文件${scan.truncated ? '（已达上限）' : ''} · 耗时 ${scan.durationMs ?? '?'}ms · 应用 ${scan.rulesChecked ?? '?'} 条检测规则`,
+      `Scanned ${scan.filesScanned} files${scan.truncated ? ' (limit reached)' : ''} · ${scan.durationMs ?? '?'}ms · ${scan.rulesChecked ?? '?'} detection rules`)))
 
   if (scan.findings.length === 0) {
     S.push(`<div class="empty">🟢 ${t('未在项目文件中发现硬编码密钥、个人信息暴露或境外端点。',

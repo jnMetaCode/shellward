@@ -171,10 +171,11 @@ export function runProjectComplianceAudit(config: ShellWardConfig, root: string)
 
   // 把文件中实测到的境外端点/依赖并入 facts（按 endpointId 或 provider 去重），
   // 使数据出境项基于真实证据（含 SDK 依赖通道）
-  const seen = new Set(env.overseas.map(o => o.endpointId || o.provider_en))
+  const seen = new Set(env.overseas.map(o => (o.endpointId || o.provider_en || '').toLowerCase()))
   for (const f of scan.findings) {
     if (f.kind !== 'overseas') continue
-    const key = f.endpointId || f.provider_en || ''
+    // 按厂商去重（不区分大小写），避免"端点命中"与"SDK依赖命中"把同一厂商列两次
+    const key = (f.provider_en || f.endpointId || '').toLowerCase()
     if (!key || seen.has(key)) continue
     seen.add(key)
     env.overseas.push({
