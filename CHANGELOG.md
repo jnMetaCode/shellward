@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.7] - 2026-06-20
+
+### Changed
+- **README 中文优先**：第一屏改为中文标题/定位/「30 秒合规体检」，英文降为 `## English` 章节（项目面向中国市场，理应中文打头）
+- **修复 `.env.example` 误报**：`.env.example` / `.sample` / `.template` / `.dist` 等模板文件不再报"权限过宽"（它们本就该提交、不含真实密钥）——真实第三方项目实测发现
+- `test-compliance.ts` 扩至 75 项（含 .env 模板回归）；全套 **263 测试**全绿
+
 ## [0.6.6] - 2026-06-20
 
 ### Changed — 诚信：静态扫描不再虚报"已合规"

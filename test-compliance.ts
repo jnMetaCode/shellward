@@ -286,7 +286,15 @@ console.log('\n--- 降误报与忽略 ---')
     writeFileSync(join(dir, 'samples', 'leak.ts'), 'const k = "sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq"\n')
     writeFileSync(join(dir, '.shellwardignore'), '# test\nsamples/\n')
 
+    // .env 模板文件不应报权限；真实 .env 应报
+    writeFileSync(join(dir, '.env.example'), 'OPENAI_API_KEY=your-key-here\n')
+    try { chmodSync(join(dir, '.env.example'), 0o644) } catch {}
+    writeFileSync(join(dir, '.env'), 'OPENAI_API_KEY=sk-RZ9mKp2QwLs7Yv3Nd8Tb1Hc4Xj6Pq\n')
+    try { chmodSync(join(dir, '.env'), 0o644) } catch {}
+
     const scan = scanProject(dir)
+    const envPerm = scan.findings.filter(f => f.kind === 'env-perm').map(f => f.file)
+    test('.env.example 模板不报权限', !envPerm.some(f => f.includes('.env.example')), envPerm.join(','))
     const secretFiles = scan.findings.filter(f => f.kind === 'secret').map(f => f.file)
     test('占位符密钥被过滤', !secretFiles.some(f => f.includes('placeholder')), secretFiles.join(','))
     test('结构真实密钥被检出', secretFiles.some(f => f.includes('real.ts')))
