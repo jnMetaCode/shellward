@@ -15,9 +15,9 @@
 
 import { createServer } from 'http'
 import { spawn } from 'child_process'
-import { mkdtempSync, rmSync, existsSync, statSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, statSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { join, resolve } from 'path'
+import { join, resolve, dirname, normalize, isAbsolute } from 'path'
 import { runProjectComplianceAudit } from '../compliance/audit.js'
 import { renderHtmlReport } from '../compliance/html-report.js'
 import { DEFAULT_CONFIG, resolveLocale } from '../types.js'
@@ -51,6 +51,12 @@ export function startWebServer(opts: WebServerOptions): void {
       const u = new URL(req.url || '/', `http://localhost:${opts.port}`)
       if (u.pathname === '/' || u.pathname === '') {
         return send(res, 200, 'text/html', formPage(!!opts.local))
+      }
+      // 本地客户端：选文件夹上传（仅本地模式；数据只到 localhost、不出本机）
+      if (u.pathname === '/scan-files' && req.method === 'POST') {
+        if (!opts.local) return send(res, 403, 'text/html', errorPage('公网模式不支持上传；请用「公开仓库 URL」。'))
+        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
+        return await handleUpload(req, res, locale, () => { active++ }, () => { active-- })
       }
       if (u.pathname === '/scan') {
         if (active >= MAX_CONCURRENT) {
@@ -120,6 +126,52 @@ async function handleLocal(res: any, path: string, locale: 'zh' | 'en', inc: () 
   }
 }
 
+const MAX_UPLOAD_BYTES = 16 * 1024 * 1024 // 16MB JSON 上限
+
+/** 本地上传：客户端把选中的文件夹读成 {path,content}[] 发来，写入临时目录后扫描 */
+async function handleUpload(req: any, res: any, locale: 'zh' | 'en', inc: () => void, dec: () => void) {
+  let body = ''
+  let size = 0
+  let aborted = false
+  await new Promise<void>((resolveBody) => {
+    req.on('data', (c: Buffer) => {
+      size += c.length
+      if (size > MAX_UPLOAD_BYTES) { aborted = true; req.destroy(); resolveBody(); return }
+      body += c.toString('utf8')
+    })
+    req.on('end', () => resolveBody())
+    req.on('error', () => { aborted = true; resolveBody() })
+  })
+  if (aborted) return send(res, 413, 'text/html', errorPage('内容过大或读取失败（上限 16MB）。大项目请用本地 CLI：npx shellward scan'))
+
+  let payload: { root?: string; files?: { path: string; content: string }[] }
+  try { payload = JSON.parse(body) } catch { return send(res, 400, 'text/html', errorPage('上传数据格式错误')) }
+  const files = Array.isArray(payload.files) ? payload.files : []
+  if (files.length === 0) return send(res, 400, 'text/html', errorPage('未选择任何文件'))
+
+  const dir = mkdtempSync(join(tmpdir(), 'sw-up-'))
+  inc()
+  try {
+    for (const f of files) {
+      if (!f || typeof f.path !== 'string' || typeof f.content !== 'string') continue
+      // 路径安全：去掉绝对路径/.. 逃逸，落在临时目录内
+      const rel = normalize(f.path).replace(/^(\.\.(\/|\\|$))+/, '')
+      if (isAbsolute(rel) || rel.includes('..')) continue
+      const dest = join(dir, rel)
+      if (!dest.startsWith(dir)) continue
+      try { mkdirSync(dirname(dest), { recursive: true }); writeFileSync(dest, f.content) } catch { /* skip */ }
+    }
+    const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    const rootName = typeof payload.root === 'string' && payload.root ? payload.root : '(uploaded folder)'
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: rootName }))
+  } catch (e: any) {
+    send(res, 500, 'text/html', errorPage('扫描失败：' + esc(e?.message || String(e))))
+  } finally {
+    dec()
+    try { rmSync(dir, { recursive: true, force: true }) } catch { /* ignore */ }
+  }
+}
+
 /** 浅克隆公开仓库到临时目录（不鉴权、超时、不执行任何仓库代码） */
 function cloneRepo(url: string, dir: string): Promise<void> {
   return new Promise((res, rej) => {
@@ -144,26 +196,68 @@ function send(res: any, code: number, type: string, body: string) {
 }
 
 function formPage(local: boolean): string {
-  const field = local
-    ? `<label>本地项目路径</label>
-       <input name="path" placeholder="/Users/you/your-ai-project" autofocus>
-       <p class="hint">本地模式：代码不上传、不出本机（客户端体验）。</p>`
-    : `<label>公开仓库地址</label>
-       <input name="repo" placeholder="https://github.com/owner/repo" autofocus>
-       <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。<b>私有/敏感代码请用本地 CLI</b>：<code>npx shellward scan</code>（不上传）。</p>`
+  const urlForm = `
+      <form action="/scan" method="get">
+        <label>${local ? '② ' : ''}公开仓库地址</label>
+        <input name="repo" placeholder="https://github.com/owner/repo"${local ? '' : ' autofocus'}>
+        <button type="submit">${local ? '体检该仓库 →' : '开始体检 →'}</button>
+        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。${local ? '' : '<b>私有/敏感代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
+      </form>`
+
+  const uploadForm = local ? `
+      <form id="dirform">
+        <label>① 选择本地项目文件夹（推荐）</label>
+        <input type="file" id="dir" webkitdirectory directory multiple>
+        <button id="dbtn" type="submit">开始体检 →</button>
+        <p class="hint">📂 直接选你的项目文件夹，无需敲路径。文件仅发送到<b>本机的本地服务</b>处理，<b>不经过任何外部服务器、不出本机</b>。</p>
+      </form>
+      <div class="or">— 或 —</div>` : ''
+
   return page('ShellWard 合规体检', `
     <div class="hero">
       <div class="logo">🛡️ Shell<span>Ward</span> 合规网关</div>
       <h1>AI 应用合规体检</h1>
-      <p class="sub">${local ? '填本地路径' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
-      <form action="/scan" method="get">
-        ${field}
-        <button type="submit">开始体检 →</button>
-      </form>
+      <p class="sub">${local ? '选项目文件夹或贴公开仓库链接' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
+      ${uploadForm}
+      ${urlForm}
       <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
         <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
-    </div>`)
+    </div>
+    ${local ? UPLOAD_SCRIPT : ''}`)
 }
+
+// 客户端：读取所选文件夹 → 过滤(跳过 node_modules 等、仅文本/配置、限大小) → POST 到本机服务
+const UPLOAD_SCRIPT = `<script>
+(function(){
+  var SKIP=/(^|\\/)(node_modules|\\.git|dist|build|\\.next|out|vendor|coverage|\\.venv|venv|__pycache__|target|\\.cache)(\\/|$)/;
+  var EXT=/\\.(ts|tsx|js|jsx|mjs|cjs|py|go|rb|java|php|rs|json|yaml|yml|toml|ini|conf|sh|txt|csv)$/i;
+  var ENV=/(^|\\/)\\.env(\\.|$)/; var DEP=/^(package\\.json|requirements\\.txt|pyproject\\.toml|go\\.mod)$/;
+  var form=document.getElementById('dirform'); if(!form) return;
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var inp=document.getElementById('dir'), btn=document.getElementById('dbtn');
+    if(!inp.files||!inp.files.length){alert('请先选择项目文件夹');return;}
+    btn.disabled=true; btn.textContent='读取中…';
+    var picked=[], total=0, root='';
+    for(var i=0;i<inp.files.length;i++){
+      var f=inp.files[i], rel=f.webkitRelativePath||f.name; if(!root)root=rel.split('/')[0];
+      if(SKIP.test(rel)) continue;
+      var base=rel.split('/').pop();
+      if(!(EXT.test(rel)||ENV.test(rel)||DEP.test(base))) continue;
+      if(f.size>524288) continue;
+      if(picked.length>=3000||total>8388608) break;
+      total+=f.size; picked.push(f);
+    }
+    if(!picked.length){alert('未找到可扫描的源码/配置文件');btn.disabled=false;btn.textContent='开始体检 →';return;}
+    btn.textContent='扫描中… ('+picked.length+' 个文件)';
+    var out=[]; for(var j=0;j<picked.length;j++){ try{ out.push({path:picked[j].webkitRelativePath||picked[j].name, content:await picked[j].text()}); }catch(_){} }
+    try{
+      var resp=await fetch('/scan-files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({root:root,files:out})});
+      var html=await resp.text(); document.open(); document.write(html); document.close();
+    }catch(err){ alert('扫描失败: '+err); btn.disabled=false; btn.textContent='开始体检 →'; }
+  });
+})();
+</script>`
 
 function errorPage(msg: string): string {
   return page('出错了', `<div class="hero"><div class="logo">🛡️ Shell<span>Ward</span></div>
@@ -189,8 +283,11 @@ input{padding:14px 16px;border:1px solid #cbd5e1;border-radius:10px;font-size:16
 input:focus{outline:none;border-color:#cb0000;box-shadow:0 0 0 3px rgba(203,0,0,.12)}
 .hint{font-size:12.5px;color:#64748b;margin:2px 0 6px}
 .hint code{background:#f1f5f9;padding:1px 6px;border-radius:5px}
+input[type=file]{padding:12px;background:#f8fafc;cursor:pointer}
 button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;
 font-weight:700;cursor:pointer;margin-top:4px}button:hover{background:#a80000}
+button:disabled{background:#94a3b8;cursor:default}
+form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
 .foot{margin:24px 0 0;font-size:12.5px;color:#94a3b8}.foot a,.back{color:#cb0000;text-decoration:none}
 .back{font-weight:600}
 </style></head><body>${body}</body></html>`

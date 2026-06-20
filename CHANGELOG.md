@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] - 2026-06-20
+
+### Changed — 本地客户端 UX：选文件夹上传（不再手敲路径）
+- 本地模式（`shellward web --local`）首页改为：**「选择项目文件夹」**（浏览器读取→仅发送到本机本地服务→扫描）+ 「公开仓库 URL」双入口，不必再手敲路径
+- 文件夹上传客户端侧过滤（跳过 node_modules/.git 等、仅文本/配置、单文件 512KB、总量 8MB、≤3000 文件），数据**不经过任何外部服务器、不出本机**
+- 新增 `POST /scan-files`（仅本地模式）：路径穿越防护（拒绝绝对路径/`..`，限制写入临时目录内）、16MB 上限、用完即删
+- 用户反馈"填路径不好填"后改进
+
 ## [0.7.0] - 2026-06-20
 
 ### Added — Web 扫描器 / 客户端（双模式，一套代码）
