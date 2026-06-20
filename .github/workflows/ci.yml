@@ -38,3 +38,6 @@ jobs:
 
       - name: Detection benchmark (precision/recall regression gate)
         run: npm run bench -- --ci
+
+      - name: Compliance-scan benchmark (precision/recall regression gate)
+        run: npm run bench:scan -- --ci

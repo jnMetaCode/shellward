@@ -1,6 +1,6 @@
 {
   "name": "shellward",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "mcpName": "io.github.jnMetaCode/shellward",
   "description": "AI agent security & MCP security middleware — prompt injection detection, AI firewall, runtime guardrails & data-loss prevention for LLM tool calls. 8-layer defense against data exfiltration & dangerous commands. Zero dependencies. SDK + OpenClaw plugin. Supports LangChain, AutoGPT, Claude Code, Cursor, OpenAI Agents, Hermes Agent.",
   "keywords": [
@@ -65,6 +65,7 @@
     "test:sdk": "npx tsx test-sdk.ts",
     "test:mcp": "npx tsx test-mcp.ts",
     "bench": "npx tsx bench/run.ts",
+    "bench:scan": "npx tsx bench/scan-bench.ts",
     "prepublishOnly": "npm run build"
   },
   "openclaw": {

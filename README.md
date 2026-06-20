@@ -390,6 +390,9 @@ Effectiveness is measured, not asserted. `npm run bench` runs every detector ove
 | Dangerous commands | 100% | 100% | 100% |
 | PII / secrets | 100% | 100% | 100% |
 | MCP tool poisoning | 100% | 100% | 100% |
+| **Compliance scan** (overseas / secret / PII vs hard negatives) | 100% | 100% | 100% |
+
+The compliance scanner has its own gated corpus — `npm run bench:scan` runs the **real `scanProject` pipeline** over 31 labeled cases (17 real risks + 14 hard negatives: domestic endpoints, placeholder keys, doc examples, lock files, invalid checksums). Self-authored corpus, CI-gated against regression.
 
 83 gated samples (attacks + hard negatives). Zero-width-interleaved and empty-quote (`r''m`) obfuscation are normalized before matching. The corpus also tracks **5 documented bypasses** (leetspeak, base64, non-zh/en languages, shell variable indirection) that regex/heuristics are not expected to catch — listed explicitly and excluded from the gate rather than hidden.
 

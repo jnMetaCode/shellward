@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.4] - 2026-06-20
+
+### Added — 合规扫描检测基准（把"信我能检"变成"看数字"）
+- `bench/scan-bench.ts` + `npm run bench:scan`：用 **31 个标注样例**（17 真实风险 + 14 硬负例：境内端点/占位符/文档示例/lock/无效校验位）跑**真实 scanProject 管线**，算精确率/召回率/F1，CI 门禁（低于 90% 失败）
+- 基线：**精确率 100% · 召回率 100% · F1 100%**
+- 建基准过程即暴露并验证了占位符过滤器的边界（含 `abcdef`/`123456` 的密钥会被当示例滤掉——偏向精确率的有意取舍）
+- README「Detection Benchmark」新增合规扫描一行（诚实标注为自建语料）
+
 ## [0.7.3] - 2026-06-20
 
 ### Added — 扫描透明度（"秒出=干活了吗"的证据）
