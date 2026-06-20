@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.12] - 2026-06-21
+
+### Fixed — 上传报告"返回"失效
+- 上传文件夹的报告经 `blob:` URL 打开，原"返回"链接是相对 `/` 在 blob 页面下失效（点了没反应）。本地模式改用**绝对地址** `http://localhost:端口/`，blob 报告也能正确返回首页
+
+### Changed — 界面美化（UI）
+- 文件选择器美化为**虚线投放区 + 红色按钮**（替代浏览器默认丑控件）
+- 卡片加顶部品牌色条、字号/间距/对比度微调，更精致
+
 ## [0.7.11] - 2026-06-21
 
 ### Changed — 能静态查的就直接判，不再"待核验"

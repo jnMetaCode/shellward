@@ -41,9 +41,13 @@ export function validateRepoUrl(input: string): { ok: true; url: string } | { ok
   return { ok: true, url }
 }
 
+// 报告「返回」链接：本地模式用绝对地址（上传报告经 blob: URL 打开，相对 '/' 会失效）
+let SERVER_BASE = '/'
+
 export function startWebServer(opts: WebServerOptions): void {
   const locale = resolveLocale(DEFAULT_CONFIG)
   const host = opts.local ? '127.0.0.1' : '0.0.0.0'
+  SERVER_BASE = opts.local ? `http://localhost:${opts.port}/` : '/'
   let active = 0
 
   const server = createServer(async (req, res) => {
@@ -113,7 +117,7 @@ async function handleRepo(res: any, repo: string, locale: 'zh' | 'en', inc: () =
   try {
     await cloneRepo(v.url, dir)
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: v.url, backLink: '/' }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: v.url, backLink: SERVER_BASE }))
   } catch (e: any) {
     const msg = esc(e?.message || String(e))
     send(res, 502, 'text/html', errorPage(
@@ -133,7 +137,7 @@ async function handleLocal(res: any, path: string, locale: 'zh' | 'en', inc: () 
   inc()
   try {
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, root)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root, backLink: '/' }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root, backLink: SERVER_BASE }))
   } finally {
     dec()
   }
@@ -176,7 +180,7 @@ async function handleUpload(req: any, res: any, locale: 'zh' | 'en', inc: () => 
     }
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
     const rootName = typeof payload.root === 'string' && payload.root ? payload.root : '(uploaded folder)'
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: rootName, backLink: '/' }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: rootName, backLink: SERVER_BASE }))
   } catch (e: any) {
     send(res, 500, 'text/html', errorPage('扫描失败：' + esc(e?.message || String(e))))
   } finally {
@@ -226,7 +230,7 @@ function handleDemo(res: any, locale: 'zh' | 'en', inc: () => void, dec: () => v
     writeFileSync(join(dir, '.env'),
       'AWS_ACCESS_KEY=AKIARZ9MKP2QWLS7YV3N\nDB_PASSWORD=Sup3rS3cretProdPwd2026\n')
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: '示例项目（含风险）/ demo-ai-app', backLink: '/' }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: '示例项目（含风险）/ demo-ai-app', backLink: SERVER_BASE }))
   } catch (e: any) {
     send(res, 500, 'text/html', errorPage('演示失败：' + esc(e?.message || String(e))))
   } finally {
@@ -373,20 +377,26 @@ function page(title: string, body: string): string {
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;
 background:linear-gradient(135deg,#eef1f6,#e2e8f0);color:#0f172a;
 font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-.hero{background:#fff;max-width:560px;width:92%;margin:40px;padding:40px;border-radius:18px;
-box-shadow:0 12px 40px rgba(15,23,42,.12);text-align:center}
-.logo{font-weight:800;font-size:15px}.logo span{color:#cb0000}
-h1{font-size:30px;margin:14px 0 8px;letter-spacing:-.5px}
-.sub{color:#64748b;margin:0 0 26px}
+.hero{background:#fff;max-width:580px;width:92%;margin:40px;padding:38px 40px 34px;border-radius:18px;
+box-shadow:0 12px 40px rgba(15,23,42,.12);text-align:center;border-top:4px solid #cb0000}
+.logo{font-weight:800;font-size:15px;letter-spacing:.2px}.logo span{color:#cb0000}
+h1{font-size:29px;margin:12px 0 8px;letter-spacing:-.5px}
+.sub{color:#64748b;margin:0 0 24px;font-size:15px}
 form{display:flex;flex-direction:column;gap:10px;text-align:left}
-label{font-size:13px;font-weight:600;color:#475569}
+label{font-size:13px;font-weight:700;color:#334155}
 input{padding:14px 16px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;width:100%}
 input:focus{outline:none;border-color:#cb0000;box-shadow:0 0 0 3px rgba(203,0,0,.12)}
-.hint{font-size:12.5px;color:#64748b;margin:2px 0 6px}
+.hint{font-size:12.5px;color:#64748b;margin:2px 0 6px;line-height:1.55}
 .hint code{background:#f1f5f9;padding:1px 6px;border-radius:5px}
-input[type=file]{padding:12px;background:#f8fafc;cursor:pointer}
+/* 文件选择器：美化成虚线投放区 + 红色按钮 */
+input[type=file]{width:100%;padding:20px 16px;border:2px dashed #cbd5e1;border-radius:12px;
+background:#f8fafc;cursor:pointer;font-size:14px;color:#64748b;transition:.15s}
+input[type=file]:hover{border-color:#cb0000;background:#fff}
+input[type=file]::file-selector-button{background:#cb0000;color:#fff;border:0;border-radius:8px;
+padding:9px 18px;margin-right:14px;font-weight:700;font-size:14px;cursor:pointer}
+input[type=file]::file-selector-button:hover{background:#a80000}
 button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;
-font-weight:700;cursor:pointer;margin-top:4px}button:hover{background:#a80000}
+font-weight:700;cursor:pointer;margin-top:4px;transition:.15s}button:hover{background:#a80000}
 button:disabled{background:#94a3b8;cursor:default}
 form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
