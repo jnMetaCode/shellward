@@ -265,63 +265,55 @@ function send(res: any, code: number, type: string, body: string) {
 function formPage(local: boolean): string {
   const urlForm = `
       <form action="/scan" method="get" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='扫描中…（大仓库需 10–60 秒，请勿重复点击）';">
-        <label>${local ? '③ ' : ''}公开仓库地址</label>
+        <label>公开仓库地址</label>
         <input name="repo" placeholder="https://github.com/owner/repo"${local ? '' : ' autofocus'}>
         <button type="submit">${local ? '体检该仓库 →' : '开始体检 →'}</button>
         <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时用上方「上传文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
       </form>`
 
-  // 本地模式：① 上传文件夹（一次选定，最方便）  ② 点选文件夹（零上传）  ③ URL
+  // 本地模式：统一「路径栏（可粘贴/可浏览填充）+ 体检按钮」，无上传、无吓人弹窗、无选择困难
   const localForms = local ? `
-      <form id="dirform">
-        <label>① 上传项目文件夹（最方便）</label>
-        <input type="file" id="dir" webkitdirectory directory multiple>
-        <button id="dbtn" type="submit">开始体检 →</button>
-        <div id="status" class="status"></div>
-        <p class="hint">选你的项目文件夹即可。<b>浏览器可能提示"上传 N 个文件"——放心：实际只发送源码/配置（自动跳过 node_modules、图片、超大文件），且只到<u>本机的本地服务</u>，不出本机。</b></p>
-      </form>
-      <details class="alt"><summary>不想上传？点选文件夹（零上传）</summary>
-        <label>② 在本机点选项目文件夹（零上传）</label>
-        <div class="browser">
-          <div class="bpath" id="curpath">加载中…</div>
-          <ul class="dirs" id="dirs"></ul>
-        </div>
-        <button id="scanbtn" type="button">✅ 扫描当前文件夹 →</button>
-        <p class="hint">服务端直接读取本机文件、零上传、不出本机，自动跳过 node_modules。</p>
-      </details>
-      <div class="or">— 或 —</div>` : ''
+      <label>体检本地项目（直接读本机文件 · 零上传 · 不出本机）</label>
+      <div class="pathrow">
+        <input id="pathbar" placeholder="粘贴项目路径，或在下方点选" spellcheck="false" autocomplete="off">
+        <button id="scanbtn" type="button">体检 →</button>
+      </div>
+      <div class="browser"><ul class="dirs" id="dirs"></ul></div>
+      <p class="hint">📂 粘贴路径直接体检，或点文件夹进入；自动跳过 node_modules。私有代码<b>不上传、不出本机</b>。</p>
+      <details class="alt"><summary>或：体检公开仓库 URL</summary>${urlForm}</details>` : ''
 
   return page('ShellWard 合规体检', `
     <div class="hero">
       <div class="logo">🛡️ Shell<span>Ward</span> 合规网关</div>
       <h1>AI 应用合规体检</h1>
-      <p class="sub">${local ? '上传/点选项目文件夹，或贴公开仓库链接' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
-      ${localForms}
-      ${urlForm}
-      <p class="demo">🤔 觉得"秒出"不真？ <a href="/demo">▶ 看一个含风险的示例报告</a>（同样秒出，但满屏发现 + 行号）</p>
+      <p class="sub">${local ? '选你的项目，' : '贴公开仓库链接，'}30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
+      ${local ? localForms : urlForm}
+      <p class="demo">🤔 想先看效果？ <a href="/demo">▶ 看一个含风险的示例报告</a></p>
       <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
         <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
     </div>
-    ${local ? UPLOAD_SCRIPT + BROWSE_SCRIPT : ''}`)
+    <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">扫描中…</div></div>
+    ${local ? BROWSE_SCRIPT : ''}`)
 }
 
-// 本地目录浏览器：点选文件夹 → 服务端直接扫（零上传，不读 node_modules）
+// 本地：统一路径栏 + 目录浏览器。粘贴路径 / 点选填充 → 服务端直接扫（零上传，跳过 node_modules）
 const BROWSE_SCRIPT = `<script>
 (function(){
-  var cur='';
-  function load(dir){
-    var cp=document.getElementById('curpath'); if(cp)cp.textContent='加载中…';
-    fetch('/browse?dir='+encodeURIComponent(dir||'')).then(function(r){return r.json()}).then(function(d){
-      if(d.error){ if(cp)cp.textContent='无法读取：'+d.error; return; }
-      cur=d.current; if(cp)cp.textContent=cur;
-      var ul=document.getElementById('dirs'); if(!ul)return; ul.innerHTML='';
-      if(d.parent){ var up=document.createElement('li'); up.className='up'; up.textContent='⬆ 上级目录'; up.onclick=function(){load(d.parent)}; ul.appendChild(up); }
-      if(!d.dirs.length){ var e=document.createElement('li'); e.className='empty'; e.textContent='（此目录无子文件夹，可直接点上方扫描）'; ul.appendChild(e); }
-      d.dirs.forEach(function(name){ var li=document.createElement('li'); li.textContent='📁 '+name; li.onclick=function(){ load(cur.replace(/\\/+$/,'')+'/'+name) }; ul.appendChild(li); });
-    }).catch(function(e){ if(cp)cp.textContent='错误：'+e; });
+  var pb=document.getElementById('pathbar'), sb=document.getElementById('scanbtn'), ul=document.getElementById('dirs');
+  function render(d){
+    if(d.error){ ul.innerHTML='<li class="empty">无法读取：'+d.error+'</li>'; return; }
+    if(typeof d.current==='string') pb.value=d.current;
+    ul.innerHTML='';
+    if(d.parent){ var up=document.createElement('li'); up.className='up'; up.textContent='⬆ 上级目录'; up.onclick=function(){load(d.parent)}; ul.appendChild(up); }
+    if(!d.dirs.length){ var e=document.createElement('li'); e.className='empty'; e.textContent='（无子文件夹，可直接点"体检"扫此目录）'; ul.appendChild(e); }
+    d.dirs.forEach(function(name){ var li=document.createElement('li'); li.textContent='📁 '+name;
+      li.onclick=function(){ load((pb.value||'').replace(/\\/+$/,'')+'/'+name) }; ul.appendChild(li); });
   }
-  var sb=document.getElementById('scanbtn');
-  if(sb){ sb.onclick=function(){ if(cur){ sb.disabled=true; sb.textContent='扫描中…'; window.location.href='/scan?path='+encodeURIComponent(cur); } }; load(''); }
+  function load(dir){ fetch('/browse?dir='+encodeURIComponent(dir||'')).then(function(r){return r.json()}).then(render).catch(function(e){ ul.innerHTML='<li class="empty">错误：'+e+'</li>'; }); }
+  function scan(){ var p=(pb.value||'').trim(); if(!p){ pb.focus(); return; } document.getElementById('overlay').style.display='flex'; window.location.href='/scan?path='+encodeURIComponent(p); }
+  sb.onclick=scan;
+  pb.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); load(pb.value); } });
+  load(''); // 从家目录起
 })();
 </script>`
 
@@ -401,7 +393,15 @@ button:disabled{background:#94a3b8;cursor:default}
 form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
 color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
+.pathrow{display:flex;gap:8px}
+.pathrow input{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.pathrow button{margin-top:0;white-space:nowrap;padding:14px 22px}
 .demo{margin:18px 0 0;font-size:13px;color:#475569}.demo a{font-weight:600}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99;
+flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px;font-size:15px;font-weight:600}
+.spin{width:46px;height:46px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;
+border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 details.alt{margin:6px 0 10px;text-align:left}
 details.alt summary{cursor:pointer;color:#cb0000;font-size:13px;font-weight:600;padding:6px 0}
 details.alt[open] summary{margin-bottom:8px}

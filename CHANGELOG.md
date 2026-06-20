@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.15] - 2026-06-21
+
+### Changed — 本地客户端体验重做（用户反馈"体验不好"）
+- **去掉文件夹上传**（webkitdirectory 会读整个 node_modules、弹"上传 3 万文件"——体验差的根源），也去掉"上传/浏览器/URL"三入口的选择困难
+- **统一为一个「路径栏 + 体检按钮」**：粘贴项目路径直接体检（最快），或点下方文件夹进入填充路径；服务端直读本机、零上传、不出本机、自动跳过 node_modules
+- **加全屏「扫描中」遮罩 + spinner**：大仓库扫描不再像卡住
+- 公开仓库 URL 降为折叠次要入口；界面更聚焦、更干净
+- 全套 **315 测试**全绿
+
 ## [0.7.14] - 2026-06-21
 
 ### Added — `shellward init`：一键接入运行时防护（打通"扫描→运行时"漏斗）
