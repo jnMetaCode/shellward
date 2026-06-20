@@ -303,6 +303,36 @@ console.log('\n--- 降误报与忽略 ---')
     `criticals=${self.findings.filter(f => f.severity === 'critical').length}`)
 }
 
+// === 11. 部署上下文：静态扫描不虚报能力项已启用 ===
+console.log('\n--- 部署/静态扫描上下文 ---')
+{
+  // deployed=true（MCP/插件，ShellWard 在运行）：能力项如实评估为 pass
+  const dep = runComplianceAudit(DEFAULT_CONFIG, cleanFacts, { deployed: true })
+  const spiDep = dep.results.find(r => r.control.id === 'pipl-spi-detect')
+  test('已部署：能力项判 pass', spiDep?.status === 'pass', spiDep?.status)
+
+  // deployed=false（静态扫描）：能力/审计项不虚报，改为 ⚪ manual
+  const stat = runComplianceAudit(DEFAULT_CONFIG, cleanFacts, { deployed: false })
+  const spiStat = stat.results.find(r => r.control.id === 'pipl-spi-detect')
+  test('静态扫描：能力项不虚报 pass（变 manual）', spiStat?.status === 'manual', spiStat?.status)
+  const auditStat = stat.results.find(r => r.control.id === 'csl-audit-log')
+  test('静态扫描：审计项变 manual（不虚报留存达标）', auditStat?.status === 'manual', auditStat?.status)
+  // env 类（境外/root）静态可观测，仍如实评估
+  const rootStat = stat.results.find(r => r.control.id === 'mlps-not-root')
+  test('静态扫描：env 类(root)仍如实评估', rootStat?.status === 'pass' || rootStat?.status === 'fail')
+  test('静态扫描无 pass 虚高（能力项不计 pass）',
+    stat.results.filter(r => r.control.method === 'capability').every(r => r.status === 'manual'))
+
+  // CLI 入口默认就是静态扫描上下文
+  const dir = mkdtempSync(join(tmpdir(), 'sw-ctx-'))
+  try {
+    writeFileSync(join(dir, 'a.txt'), 'hello')
+    const { report } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    test('CLI 体检：能力项均为 manual（不虚报）',
+      report.results.filter(r => r.control.method === 'capability').every(r => r.status === 'manual'))
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+}
+
 // === 总结 ===
 console.log(`\n========== 结果: ${passed} 通过, ${failed} 失败 ==========\n`)
 if (failed > 0) process.exit(1)

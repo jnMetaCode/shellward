@@ -103,8 +103,8 @@ function runScan(args: string[]) {
         body,
         '',
         zh
-          ? '💡 这是只读扫描，未上传任何数据。要在运行时自动拦截风险，把 ShellWard 作为 MCP/插件接入你的 AI Agent。'
-          : '💡 Read-only scan, nothing uploaded. To block these risks at runtime, integrate ShellWard as an MCP server/plugin in your AI agent.',
+          ? '💡 只读扫描、不上传任何数据。得分仅反映本次可静态观测的项目风险；⚪ 待确认项需把 ShellWard 作为 MCP/插件部署为运行时防护，或人工核验后才能满足。'
+          : '💡 Read-only scan, nothing uploaded. The score reflects only statically-observable project risk; ⚪ items require deploying ShellWard as a runtime guard (MCP/plugin) or manual review.',
       ]
       process.stdout.write(out.join('\n') + '\n')
     }

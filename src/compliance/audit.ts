@@ -113,14 +113,25 @@ function extractTs(line: string): string | undefined {
   return m?.[1]
 }
 
+export interface AuditOptions {
+  /**
+   * ShellWard 是否作为运行时防护已部署。
+   * - true（默认）：MCP / 插件上下文，能力层确实在运行，如实评估
+   * - false：CLI 静态扫描，未部署运行时 —— 能力/审计类控制项标为顾问态，不虚报"已启用"
+   */
+  deployed?: boolean
+}
+
 /**
  * 运行合规体检。
  * @param config ShellWard 当前配置
  * @param facts  环境事实；不传则从真实环境采集
+ * @param opts   评估上下文（是否已部署运行时）
  */
-export function runComplianceAudit(config: ShellWardConfig, facts?: EnvFacts): ComplianceReport {
+export function runComplianceAudit(config: ShellWardConfig, facts?: EnvFacts, opts?: AuditOptions): ComplianceReport {
   const env = facts ?? gatherEnvFacts()
-  const results: ControlResult[] = COMPLIANCE_CONTROLS.map(c => checkControl(c, config, env))
+  const deployed = opts?.deployed ?? true
+  const results: ControlResult[] = COMPLIANCE_CONTROLS.map(c => checkControl(c, config, env, deployed))
 
   let passed = 0, warned = 0, failed = 0, manual = 0
   for (const r of results) {
@@ -170,7 +181,8 @@ export function runProjectComplianceAudit(config: ShellWardConfig, root: string)
     })
   }
 
-  const report = runComplianceAudit(config, env)
+  // CLI 静态扫描：未部署运行时 → 能力/审计类不虚报"已启用"，只如实评估项目证据
+  const report = runComplianceAudit(config, env, { deployed: false })
 
   // 发现驱动评分：项目实测风险按严重度扣分（封顶 40），使分数反映"你的真实风险"
   const penalty = computeProjectPenalty(scan)
@@ -192,7 +204,13 @@ function computeProjectPenalty(scan: ProjectScanResult): number {
   return Math.min(MAX_PROJECT_PENALTY, p)
 }
 
-function checkControl(c: ComplianceControl, config: ShellWardConfig, env: EnvFacts): ControlResult {
+function checkControl(c: ComplianceControl, config: ShellWardConfig, env: EnvFacts, deployed: boolean): ControlResult {
+  // 静态扫描（未部署运行时）下，能力层/审计日志类控制项无法验证 —— 标为顾问态，绝不虚报"已合规"
+  if (!deployed && (c.method === 'capability' || c.method === 'config' || c.method === 'audit')) {
+    return mk(c, 'manual',
+      `ShellWard 运行时可提供此防护；当前为静态扫描、未部署，无法验证。整改：${c.remediation_zh}`,
+      `Provided by ShellWard runtime; not verifiable in a static scan. ${c.remediation_en}`)
+  }
   switch (c.method) {
     case 'capability': return checkCapability(c, config)
     case 'config':     return checkConfig(c, config)

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.6] - 2026-06-20
+
+### Changed — 诚信：静态扫描不再虚报"已合规"
+- 体检区分**「已部署运行时」与「静态扫描」**两种上下文（`runComplianceAudit` 增 `opts.deployed`，默认 true）
+- `npx shellward scan`（静态扫描，未部署 ShellWard 运行时）下，**能力层 / 审计类控制项不再判为 ✅ "已启用"**，改为 ⚪「ShellWard 运行时可提供，静态扫描无法验证」——避免给用户虚假的合规安心
+- 仅 env 可观测项（境外端点/依赖、是否 root）如实评估；得分基于真实证据
+- MCP / 插件上下文（ShellWard 实际在运行）保持如实"已启用"
+- CLI footer 明确：得分仅反映可静态观测的项目风险，⚪ 项需运行时部署或人工核验
+- `test-compliance.ts` 扩至 74 项；全套 **262 测试**全绿
+
 ## [0.6.5] - 2026-06-20
 
 ### Changed — 扫描器精度（降"狼来了"误报）
