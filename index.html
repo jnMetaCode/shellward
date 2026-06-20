@@ -35,7 +35,11 @@ h2{font-size:26px;margin:0 0 8px;text-align:center}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px}
 .card{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--bg)}
 .card h3{margin:0 0 6px;font-size:17px}
-.card p{margin:0;color:var(--muted);font-size:14.5px}
+.card p{margin:0 0 12px;color:var(--muted);font-size:14.5px}
+.cmd2{display:flex;align-items:center;gap:8px;background:#0f172a;border-radius:8px;padding:8px 10px}
+.cmd2 code{flex:1;color:#e2e8f0;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-x:auto}
+.cmd2 button{background:#1e293b;color:#94a3b8;border:0;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer}
+.cmd2 button:hover{color:#fff}
 .problem{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;margin-top:8px}
 .problem b{color:var(--brand)}
 .trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px}
@@ -69,7 +73,7 @@ td code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12.5px}
   </div>
   <div class="badges">
     <img src="https://img.shields.io/npm/v/shellward?color=cb0000&label=npm" alt="npm">
-    <img src="https://img.shields.io/badge/tests-300%20passing-brightgreen" alt="tests">
+    <img src="https://img.shields.io/badge/tests-302%20passing-brightgreen" alt="tests">
     <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="deps">
     <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license">
   </div>
@@ -134,15 +138,39 @@ td code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12.5px}
   </div>
 </section>
 
+<section>
+  <h2>三种用法 · 复制即用</h2>
+  <p class="lead">零安装、零依赖。私有代码全程不出本机。</p>
+  <div class="grid">
+    <div class="card">
+      <h3>① 命令行体检</h3>
+      <p>在项目根目录跑一行，终端直接出红黄绿评分卡。</p>
+      <div class="cmd2"><code>npx shellward scan</code><button onclick="cp(this,'npx shellward scan')">复制</button></div>
+    </div>
+    <div class="card" style="border-color:var(--brand);border-width:2px">
+      <h3>② 图形界面（推荐 · 不用命令行）</h3>
+      <p>一行命令自动打开浏览器界面，<b>上传或点选项目文件夹</b>即可体检，扫完可返回再扫下一个。私有代码不出本机。</p>
+      <div class="cmd2"><code>npx shellward web --local</code><button onclick="cp(this,'npx shellward web --local')">复制</button></div>
+    </div>
+    <div class="card">
+      <h3>③ 在线 / CI</h3>
+      <p>公开仓库可部署成网页贴 URL 体检（见 Dockerfile）；或用 GitHub Action 在 PR 自动门禁。</p>
+      <div class="cmd2"><code>npx shellward scan --ci</code><button onclick="cp(this,'npx shellward scan --ci')">复制</button></div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:18px">💡 想先看效果？图形界面里有「▶ 含风险示例」一键演示。</p>
+</section>
+
 <section class="cta">
-  <h2>现在就试</h2>
-  <p class="lead">在你的 AI 项目根目录运行：</p>
-  <div style="text-align:center"><div class="cmd" style="display:inline-flex">npx shellward scan</div></div>
-  <p style="margin-top:24px">
+  <h2>开始</h2>
+  <p style="margin-top:8px">
     <a class="btn" href="https://github.com/jnMetaCode/shellward">GitHub ⭐ Star</a>
     <a class="btn alt" href="https://www.npmjs.com/package/shellward">npm</a>
   </p>
 </section>
+<script>
+function cp(b,t){navigator.clipboard&&navigator.clipboard.writeText(t).then(function(){var o=b.textContent;b.textContent='已复制';setTimeout(function(){b.textContent=o},1500)})}
+</script>
 
 <footer>
   公众号「AI不止语」· 技术问答 · 项目更新 · 实战文章<br>
