@@ -13,6 +13,7 @@ src/rules/injection-en.ts
 src/rules/dangerous-commands.ts
 src/rules/protected-paths.ts
 src/rules/tool-poisoning.ts
+src/web/scan-server.ts
 
 # 测试、基准语料、演示（故意包含攻击样本/示例密钥）
 test-*.ts

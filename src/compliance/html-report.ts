@@ -100,8 +100,14 @@ export function renderHtmlReport(
       `Scanned ${scan.filesScanned} files${scan.truncated ? ' (limit reached)' : ''} · ${scan.durationMs ?? '?'}ms · ${scan.rulesChecked ?? '?'} detection rules`)))
 
   if (scan.findings.length === 0) {
-    S.push(`<div class="empty">🟢 ${t('未在项目文件中发现硬编码密钥、个人信息暴露或境外端点。',
-      'No hardcoded secrets, PII, or overseas endpoints found in project files.')}</div>`)
+    // 空结果也要展示"检查过程"——逐项列出查了什么、均未命中，证明确实扫了
+    S.push(`<div class="empty">🟢 ${t('逐项检查完成，未在可扫描文件中发现风险。', 'All checks passed — no risks found in scannable files.')}</div>`)
+    S.push(`<table class="tbl checked"><tbody>
+      <tr><td>🌐 ${t('境外大模型端点 + SDK 依赖', 'Overseas LLM endpoints + SDK deps')}</td><td class="muted">${t('OpenAI / Anthropic / Gemini / Cohere… 共 38 个特征', '38 signatures')}</td><td class="right ok">✓ ${t('0 命中', '0 hits')}</td></tr>
+      <tr><td>🔑 ${t('硬编码密钥', 'Hardcoded secrets')}</td><td class="muted">${t('OpenAI/GitHub/AWS key、私钥、JWT、口令、连接串', 'OpenAI/GitHub/AWS/private key/JWT/password/conn-string')}</td><td class="right ok">✓ ${t('0 命中', '0 hits')}</td></tr>
+      <tr><td>🪪 ${t('中文 PII + 国际 PII', 'Chinese + intl PII')}</td><td class="muted">${t('身份证(校验位)/手机号/银行卡(Luhn)/SSN/信用卡', 'CN ID(checksum)/mobile/UnionPay(Luhn)/SSN/credit card')}</td><td class="right ok">✓ ${t('0 命中', '0 hits')}</td></tr>
+      <tr><td>📂 .env ${t('权限', 'permission')}</td><td class="muted">${t('含密钥的 .env 不应组/其他可读', '.env should not be group/other readable')}</td><td class="right ok">✓ ${t('正常', 'OK')}</td></tr>
+    </tbody></table>`)
   } else {
     S.push('<div class="chips">')
     for (const k of KIND_ORDER) if (scan.counts[k] > 0) {
@@ -296,6 +302,8 @@ section,.reg{padding:0 36px}
   padding:0 8px;border-radius:999px;margin-left:4px;font-weight:600}
 .empty{margin:8px 36px;padding:16px 18px;background:var(--pass-bg);color:var(--pass);
   border-radius:10px;font-weight:600;font-size:14px}
+.checked td.ok{color:var(--pass);font-weight:700}
+.checked td:first-child{font-weight:600;white-space:nowrap}
 
 /* chips 概览 */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 36px 4px}

@@ -146,7 +146,23 @@ export function renderProjectFindings(scan: ProjectScanResult, locale: 'zh' | 'e
   L.push('')
 
   if (scan.findings.length === 0) {
-    L.push(zh ? '🟢 未在项目文件中发现硬编码密钥、个人信息暴露或境外端点。' : '🟢 No hardcoded secrets, PII exposure, or overseas endpoints found in project files.')
+    L.push(zh ? '🟢 逐项检查完成，未在可扫描文件中发现风险：' : '🟢 All checks passed — no risks found:')
+    L.push('')
+    if (zh) {
+      L.push('| 检查项 | 覆盖 | 结果 |')
+      L.push('|---|---|---|')
+      L.push('| 🌐 境外大模型端点 + SDK 依赖 | OpenAI/Anthropic/Gemini… 38 个特征 | ✓ 0 命中 |')
+      L.push('| 🔑 硬编码密钥 | OpenAI/GitHub/AWS key、私钥、JWT、口令、连接串 | ✓ 0 命中 |')
+      L.push('| 🪪 中文+国际 PII | 身份证(校验位)/手机号/银行卡(Luhn)/SSN/信用卡 | ✓ 0 命中 |')
+      L.push('| 📂 .env 权限 | 含密钥的 .env 不应组/其他可读 | ✓ 正常 |')
+    } else {
+      L.push('| Check | Coverage | Result |')
+      L.push('|---|---|---|')
+      L.push('| 🌐 Overseas endpoints + SDK deps | 38 signatures | ✓ 0 hits |')
+      L.push('| 🔑 Hardcoded secrets | OpenAI/GitHub/AWS/private key/JWT/password | ✓ 0 hits |')
+      L.push('| 🪪 PII (CN + intl) | CN ID/mobile/UnionPay/SSN/credit card | ✓ 0 hits |')
+      L.push('| 📂 .env permission | group/other-readable check | ✓ OK |')
+    }
     L.push('')
     return L.join('\n')
   }

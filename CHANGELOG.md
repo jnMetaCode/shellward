@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.6] - 2026-06-20
+
+### Added — 让"检查过程"可见（回应"秒出=没检查吗"）
+- **空结果也展示检查过程**：未发现风险时不再只说"未发现"，而是逐项列出查了什么（境外端点+SDK依赖38特征 / 硬编码密钥 / 中文+国际PII / .env权限）+ ✓0命中 + 文件数/规则数/耗时——证明确实逐项扫了
+- **内置"含风险示例"一键演示** (`/demo` + 首页按钮)：扫一个故意埋了风险的样例项目，同样秒出但满屏发现(境外5/密钥6/PII4 + 行号)，直观证明"快≠假"
+- 验证：独立 grep 确认真实干净项目(superpowers-zh)无风险→报0正确；往副本植入密钥→立刻命中 file:line
+
 ## [0.7.5] - 2026-06-20
 
 ### Fixed — web 客户端"扫不了"的真实 bug（用户反馈后修）

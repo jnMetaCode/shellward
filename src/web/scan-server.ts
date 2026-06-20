@@ -58,6 +58,11 @@ export function startWebServer(opts: WebServerOptions): void {
         if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
         return await handleUpload(req, res, locale, () => { active++ }, () => { active-- })
       }
+      // 演示：扫一个内置的「含风险样例项目」——证明"秒出≠没检查"（满屏发现 + 行号）
+      if (u.pathname === '/demo') {
+        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
+        return handleDemo(res, locale, () => { active++ }, () => { active-- })
+      }
       if (u.pathname === '/scan') {
         if (active >= MAX_CONCURRENT) {
           return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试（并发上限）'))
@@ -175,6 +180,35 @@ async function handleUpload(req: any, res: any, locale: 'zh' | 'en', inc: () => 
   }
 }
 
+/** 演示：内置「含风险样例项目」扫描，证明检测真在工作 */
+function handleDemo(res: any, locale: 'zh' | 'en', inc: () => void, dec: () => void) {
+  const dir = mkdtempSync(join(tmpdir(), 'sw-demo-'))
+  inc()
+  try {
+    mkdirSync(join(dir, 'src'), { recursive: true })
+    mkdirSync(join(dir, 'data'), { recursive: true })
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({
+      name: 'demo-ai-app', dependencies: { 'openai': '^4.20.0', '@anthropic-ai/sdk': '^0.20.0', 'express': '^4' },
+    }, null, 2))
+    writeFileSync(join(dir, 'src', 'config.ts'),
+      'export const LLM = "https://api.openai.com/v1"\n'
+      + 'const OPENAI_KEY = "sk-Rz9MkP2qWlS7yV3nD8tB1hC4xJ6pQsTuVwYz0"\n'
+      + 'const GITHUB_TOKEN = "ghp_Rz9MkP2qWlS7yV3nD8tB1hC4xJ6pQsTuVwYz"\n'
+      + 'export const ADMIN_PHONE = "13912345678"\n')
+    writeFileSync(join(dir, 'data', 'customers.csv'),
+      'name,id_card,phone,card\n张三,110101199003071233,13800138000,4111111111111111\n')
+    writeFileSync(join(dir, '.env'),
+      'AWS_ACCESS_KEY=AKIARZ9MKP2QWLS7YV3N\nDB_PASSWORD=Sup3rS3cretProdPwd2026\n')
+    const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: '示例项目（含风险）/ demo-ai-app' }))
+  } catch (e: any) {
+    send(res, 500, 'text/html', errorPage('演示失败：' + esc(e?.message || String(e))))
+  } finally {
+    dec()
+    try { rmSync(dir, { recursive: true, force: true }) } catch { /* ignore */ }
+  }
+}
+
 /** 浅克隆公开仓库到临时目录（不鉴权、超时、不执行任何仓库代码） */
 function cloneRepo(url: string, dir: string): Promise<void> {
   return new Promise((res, rej) => {
@@ -224,6 +258,7 @@ function formPage(local: boolean): string {
       <p class="sub">${local ? '选项目文件夹或贴公开仓库链接' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
       ${uploadForm}
       ${urlForm}
+      <p class="demo">🤔 觉得"秒出"不真？ <a href="/demo">▶ 看一个含风险的示例报告</a>（同样秒出，但满屏发现 + 行号）</p>
       <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
         <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
     </div>
@@ -301,6 +336,7 @@ button:disabled{background:#94a3b8;cursor:default}
 form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
 color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
+.demo{margin:18px 0 0;font-size:13px;color:#475569}.demo a{font-weight:600}
 .foot{margin:24px 0 0;font-size:12.5px;color:#94a3b8}.foot a,.back{color:#cb0000;text-decoration:none}
 .back{font-weight:600}
 </style></head><body>${body}</body></html>`
