@@ -9,8 +9,11 @@
 //
 // 设计目标：30 秒、零配置、出一张可截图的「你的项目」合规风险报告。
 
-import { resolve } from 'path'
+import { resolve, join } from 'path'
 import { writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { createServer } from 'http'
+import { spawn } from 'child_process'
 import { ShellWard } from './core/engine.js'
 import { runProjectComplianceAudit } from './compliance/audit.js'
 import { renderComplianceReport, renderProjectFindings } from './compliance/report.js'
@@ -48,6 +51,8 @@ function runScan(args: string[]) {
   const ci = args.includes('--ci')
   const outPath = flagValue(args, '--out')
   const htmlPath = flagValue(args, '--html')
+  const open = args.includes('--open')
+  const serve = args.includes('--serve')
   const dirArg = args.find(a => !a.startsWith('-'))
   const root = resolve(dirArg || process.cwd())
 
@@ -61,6 +66,39 @@ function runScan(args: string[]) {
   const zh = locale === 'zh'
 
   const { report, scan } = runProjectComplianceAudit(guard.config, root)
+
+  // ===== 本地 web 视图（方便看；数据全程不出本机）=====
+  if (serve) {
+    const html = renderHtmlReport(report, scan, locale, { root })
+    const port = Number(flagValue(args, '--serve') || flagValue(args, '--port')) || 7777
+    const server = createServer((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+      res.end(html)
+    })
+    server.on('error', (e: any) => {
+      console.error(zh ? `无法启动本地服务: ${e?.message}` : `Failed to start server: ${e?.message}`)
+      process.exit(1)
+    })
+    server.listen(port, '127.0.0.1', () => {
+      const url = `http://localhost:${port}`
+      process.stdout.write(zh
+        ? `🌐 本地合规报告: ${url}  (得分 ${report.score}/100 [${report.grade}]，Ctrl+C 退出；数据不出本机)\n`
+        : `🌐 Local compliance report: ${url}  (score ${report.score}/100 [${report.grade}]; Ctrl+C to stop; nothing leaves your machine)\n`)
+      openBrowser(url)
+    })
+    return
+  }
+
+  if (open) {
+    const html = renderHtmlReport(report, scan, locale, { root })
+    const file = join(tmpdir(), `shellward-report-${report.score}-${report.grade}.html`)
+    writeFileSync(file, html, 'utf-8')
+    process.stdout.write(zh
+      ? `🌐 已在浏览器打开合规报告: ${file}  (得分 ${report.score}/100 [${report.grade}]；数据不出本机)\n`
+      : `🌐 Opened compliance report in browser: ${file}  (score ${report.score}/100 [${report.grade}])\n`)
+    openBrowser(file)
+    return
+  }
 
   if (json) {
     process.stdout.write(JSON.stringify({
@@ -117,6 +155,19 @@ function runScan(args: string[]) {
   }
 }
 
+/** 跨平台在默认浏览器打开 URL 或本地文件（失败静默，不影响主流程） */
+function openBrowser(target: string): void {
+  const cmd = process.platform === 'darwin' ? 'open'
+    : process.platform === 'win32' ? 'cmd'
+    : 'xdg-open'
+  const cmdArgs = process.platform === 'win32' ? ['/c', 'start', '', target] : [target]
+  try {
+    const child = spawn(cmd, cmdArgs, { stdio: 'ignore', detached: true })
+    child.on('error', () => {})
+    child.unref()
+  } catch { /* 打开失败不影响 */ }
+}
+
 /** 取 `--flag value` 或 `--flag=value` 的值 */
 function flagValue(args: string[], flag: string): string | undefined {
   const i = args.indexOf(flag)
@@ -136,6 +187,8 @@ Usage:
   shellward scan --ci      Exit non-zero if critical findings
   shellward scan --out f   Export the full report to a Markdown file
   shellward scan --html f  Export a self-contained HTML report (print to PDF)
+  shellward scan --open    Scan and open the report in your browser (local)
+  shellward scan --serve   Scan and serve the report at http://localhost (local)
   shellward mcp            Start MCP server (stdio)
   shellward --help
 
@@ -150,6 +203,8 @@ PII in files, .env permissions. Maps to CSL / PIPL / MLPS / cross-border / label
   shellward scan --ci       有 critical 发现时非零退出
   shellward scan --out 文件  导出完整报告为 Markdown（合规存档）
   shellward scan --html 文件 导出自包含 HTML 报告（浏览器可打印成 PDF）
+  shellward scan --open     扫描并在浏览器打开报告（本地，方便看）
+  shellward scan --serve    扫描并在 http://localhost 提供报告（本地服务）
   shellward mcp             启动 MCP 服务器（stdio）
   shellward --help
 

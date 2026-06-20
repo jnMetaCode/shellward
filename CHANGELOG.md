@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.8] - 2026-06-20
+
+### Added — 本地 web 视图（方便看，数据不出本机）
+- **`npx shellward scan --open`**：扫描后把 HTML 合规报告写入临时目录并在默认浏览器打开
+- **`npx shellward scan --serve [port]`**：本地零依赖 HTTP 服务（默认 7777，仅监听 127.0.0.1）提供报告，自动打开浏览器
+- 坚持"数据不出本机"原则：**不做云端上传扫描**，只在本地起服务/打开文件查看
+- 真实第三方项目狗粮验证：非 AI 库（chalk）0 误报、Python AI 项目（openai-quickstart）正确检出依赖
+
 ## [0.6.7] - 2026-06-20
 
 ### Changed

@@ -37,6 +37,8 @@ npx shellward scan
 合规得分: 63/100  [C]
 ```
 
+想在浏览器里看？`npx shellward scan --open`（扫完直接打开报告）或 `--serve`（本地 http://localhost 提供报告）——**数据全程不出本机**。
+
 `--json` 供 CI · `--ci` 发现 critical 时让构建失败 · `--html report.html` 导出可打印成 PDF 的报告（备案/审计存档）· 也可作 [GitHub Action](#github-action-pr-compliance-gate) 接入 PR 门禁。
 
 > 检测重点：**境外大模型端点与 SDK 依赖（数据出境——中国独有、英文工具没有的概念）**、硬编码密钥、文件中的中文 PII、`.env` 暴露。扫到境外模型（如 `openai` 依赖）时，**直接给出境内合规替代**（通义千问 / DeepSeek / Kimi / 智谱）及其 OpenAI 兼容 `base_url`——多数迁移只需改一个 `base_url`。
