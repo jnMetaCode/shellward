@@ -8,7 +8,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-302%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-303%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 **🌐 官网: https://jnmetacode.github.io/shellward/**

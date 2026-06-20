@@ -189,17 +189,46 @@ export function runProjectComplianceAudit(config: ShellWardConfig, root: string)
   // CLI 静态扫描：未部署运行时 → 能力/审计类不虚报"已启用"，只如实评估项目证据
   const report = runComplianceAudit(config, env, { deployed: false })
 
+  // 「敏感个人信息识别」这条静态扫描确实做得到 —— 直接连到扫描结果，不再标"待核验"
+  const piiCount = scan.findings.filter(f => f.kind === 'pii').length
+  const spi = report.results.find(r => r.control.id === 'pipl-spi-detect')
+  if (spi) {
+    if (piiCount > 0) {
+      spi.status = 'fail'
+      spi.detail_zh = `扫描在项目文件中发现 ${piiCount} 处个人信息暴露（见上方「项目实测风险」）— 需评估最小必要并脱敏`
+      spi.detail_en = `Scan found ${piiCount} PII exposure(s) in files — assess minimization & de-identify`
+    } else {
+      spi.status = 'pass'
+      spi.detail_zh = '已扫描项目文件，未发现明文个人信息暴露（运行时 PII 处理建议仍接入 ShellWard）'
+      spi.detail_en = 'Scanned files; no plaintext PII exposure found'
+    }
+  }
+
+  // override 改了状态 → 重算计数与控制项得分
+  recount(report)
+  const baseScore = computeScore(report.results)
+
   // 发现驱动评分：项目实测风险按严重度扣分（封顶 40），使分数反映"你的真实风险"
   const penalty = computeProjectPenalty(scan)
-  if (penalty > 0) {
-    report.score = Math.max(0, report.score - penalty)
-    report.grade = gradeOf(report.score)
-    report.projectPenalty = penalty
-  }
+  report.score = Math.max(0, baseScore - penalty)
+  report.grade = gradeOf(report.score)
+  if (penalty > 0) report.projectPenalty = penalty
   report.staticScan = true
   report.filesScanned = scan.filesScanned
 
   return { report, scan }
+}
+
+/** 重新统计 pass/warn/fail/manual 计数（控制项状态被覆盖后调用） */
+function recount(report: ComplianceReport): void {
+  let passed = 0, warned = 0, failed = 0, manual = 0
+  for (const r of report.results) {
+    if (r.status === 'pass') passed++
+    else if (r.status === 'warn') warned++
+    else if (r.status === 'fail') failed++
+    else manual++
+  }
+  report.passed = passed; report.warned = warned; report.failed = failed; report.manual = manual
 }
 
 const FINDING_PENALTY = { critical: 8, high: 4, medium: 1 } as const

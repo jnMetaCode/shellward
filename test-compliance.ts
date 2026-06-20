@@ -337,8 +337,11 @@ console.log('\n--- 部署/静态扫描上下文 ---')
   try {
     writeFileSync(join(dir, 'a.txt'), 'hello')
     const { report } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
-    test('CLI 体检：能力项均为 manual（不虚报）',
-      report.results.filter(r => r.control.method === 'capability').every(r => r.status === 'manual'))
+    // 能力项默认 manual（不虚报）——但 pipl-spi-detect 静态可查，直接连扫描结果（不算虚报）
+    test('CLI 体检：能力项均为 manual（pipl-spi-detect 除外，它静态可查）',
+      report.results.filter(r => r.control.method === 'capability' && r.control.id !== 'pipl-spi-detect').every(r => r.status === 'manual'))
+    const spi = report.results.find(r => r.control.id === 'pipl-spi-detect')
+    test('CLI 体检：敏感个人信息识别已直接判定(非待核验)', spi?.status === 'pass' || spi?.status === 'fail', spi?.status)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 }
 

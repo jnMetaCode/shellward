@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.11] - 2026-06-21
+
+### Changed — 能静态查的就直接判，不再"待核验"
+- **「敏感个人信息识别」(PIPL §28) 直接连扫描结果**：扫描本就在文件里找身份证/手机号/银行卡——发现即判「不合规 + N 处」，未发现即判「合规」，不再标 ⚪ 待核验（待核验从 12 → 11）
+- 诚实边界说明：其余待核验项（审计留存 6 个月、运行时拦违禁、数据外发拦截、访问控制等）是**运行时行为**，静态扫描原理上查不了，标"待核验"而非虚报已合规
+- 覆盖控制项状态后正确重算计数与得分
+
 ## [0.7.10] - 2026-06-21
 
 ### Changed — web 客户端更易操作
