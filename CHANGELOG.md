@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.8] - 2026-06-20
+
+### Changed — 本地客户端改用「目录浏览器」，彻底解决上传 3 万文件的问题
+- **本地模式不再用浏览器文件夹上传**（webkitdirectory 会读取整个 node_modules，弹"上传 3 万+ 文件"、又慢又吓人）
+- 改为**服务端目录浏览器** `/browse`（仅本地模式）：在网页里点进本机文件夹 → 服务端**直接读取本机文件扫描**，**零上传、不出本机、自动跳过 node_modules**
+- 公网模式禁止 `/browse`（防止扫服务器硬盘），返回 403
+- 配合 0.7.7 跳过 `release/*.app` 构建产物，长路径不再压坏报告表格
+- `test-web.ts` 扩至 20 项（含目录浏览 + 公网拒绝浏览）；全套 **302 测试**全绿
+
 ## [0.7.7] - 2026-06-20
 
 ### Fixed — 真实项目扫描的两个问题（用户实测发现）

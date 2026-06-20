@@ -38,9 +38,13 @@ async function main() {
   test('服务启动并响应', up)
   if (up) {
     const home = await (await fetch(base + '/')).text()
-    test('首页含「选择本地项目文件夹」', home.includes('选择本地项目文件夹'))
-    test('首页含上传脚本 /scan-files', home.includes('scan-files'))
+    test('首页含目录浏览器（点选文件夹）', home.includes('扫描当前文件夹') && home.includes('curpath'))
     test('首页含 URL 入口', home.includes('公开仓库地址'))
+
+    // 目录浏览器：列子目录（零上传）
+    const browse = await (await fetch(base + '/browse?dir=' + encodeURIComponent(tmpdir()))).json() as any
+    test('/browse 返回当前目录与子目录列表', typeof browse.current === 'string' && Array.isArray(browse.dirs))
+    test('/browse 不列出 node_modules', !browse.dirs.includes('node_modules'))
 
     // 模拟浏览器上传（客户端读文件夹后发的 JSON）
     const payload = {
@@ -94,7 +98,10 @@ async function main() {
   test('公网服务启动', pup)
   if (pup) {
     const phome = await (await fetch(pbase + '/')).text()
-    test('公网首页不含本地上传（只 URL）', !phome.includes('选择本地项目文件夹') && phome.includes('公开仓库地址'))
+    test('公网首页不含本地目录浏览（只 URL）', !phome.includes('扫描当前文件夹') && phome.includes('公开仓库地址'))
+    // 公网模式禁止目录浏览（防止扫服务器硬盘）
+    const browseBlocked = await fetch(pbase + '/browse?dir=/etc')
+    test('公网模式拒绝目录浏览 (403)', browseBlocked.status === 403, `status=${browseBlocked.status}`)
     // 公网模式禁止本地路径扫描
     const blocked = await fetch(pbase + '/scan?path=/etc')
     test('公网模式拒绝本地路径扫描 (403)', blocked.status === 403, `status=${blocked.status}`)

@@ -15,8 +15,8 @@
 
 import { createServer } from 'http'
 import { spawn } from 'child_process'
-import { mkdtempSync, rmSync, existsSync, statSync, mkdirSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
+import { mkdtempSync, rmSync, existsSync, statSync, mkdirSync, writeFileSync, readdirSync } from 'fs'
+import { tmpdir, homedir } from 'os'
 import { join, resolve, dirname, normalize, isAbsolute } from 'path'
 import { runProjectComplianceAudit } from '../compliance/audit.js'
 import { renderHtmlReport } from '../compliance/html-report.js'
@@ -57,6 +57,11 @@ export function startWebServer(opts: WebServerOptions): void {
         if (!opts.local) return send(res, 403, 'text/html', errorPage('公网模式不支持上传；请用「公开仓库 URL」。'))
         if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
         return await handleUpload(req, res, locale, () => { active++ }, () => { active-- })
+      }
+      // 本地目录浏览（仅本地模式）：服务端直接列子目录，让用户点选要扫的文件夹（零上传）
+      if (u.pathname === '/browse') {
+        if (!opts.local) return send(res, 403, 'application/json', JSON.stringify({ error: '仅本地模式可用' }))
+        return handleBrowse(res, u.searchParams.get('dir'))
       }
       // 演示：扫一个内置的「含风险样例项目」——证明"秒出≠没检查"（满屏发现 + 行号）
       if (u.pathname === '/demo') {
@@ -180,6 +185,27 @@ async function handleUpload(req: any, res: any, locale: 'zh' | 'en', inc: () => 
   }
 }
 
+/** 本地目录浏览：返回某目录下的子目录列表（供网页点选；不读文件内容、不上传） */
+function handleBrowse(res: any, dirParam: string | null) {
+  try {
+    const abs = resolve(dirParam && dirParam.trim() ? dirParam : homedir())
+    const entries = readdirSync(abs, { withFileTypes: true })
+      .filter(e => { try { return e.isDirectory() } catch { return false } })
+      .map(e => e.name)
+      .filter(n => !n.startsWith('.') && n !== 'node_modules')
+      .sort((a, b) => a.localeCompare(b))
+      .slice(0, 500)
+    const parent = dirname(abs)
+    send(res, 200, 'application/json', JSON.stringify({
+      current: abs,
+      parent: parent === abs ? null : parent,
+      dirs: entries,
+    }))
+  } catch (e: any) {
+    send(res, 200, 'application/json', JSON.stringify({ error: e?.message || String(e) }))
+  }
+}
+
 /** 演示：内置「含风险样例项目」扫描，证明检测真在工作 */
 function handleDemo(res: any, locale: 'zh' | 'en', inc: () => void, dec: () => void) {
   const dir = mkdtempSync(join(tmpdir(), 'sw-demo-'))
@@ -242,13 +268,13 @@ function formPage(local: boolean): string {
       </form>`
 
   const uploadForm = local ? `
-      <form id="dirform">
-        <label>① 选择本地项目文件夹（推荐）</label>
-        <input type="file" id="dir" webkitdirectory directory multiple>
-        <button id="dbtn" type="submit">开始体检 →</button>
-        <div id="status" class="status"></div>
-        <p class="hint">📂 直接选你的项目文件夹，无需敲路径。文件仅发送到<b>本机的本地服务</b>处理，<b>不经过任何外部服务器、不出本机</b>。</p>
-      </form>
+      <label>① 在本机点选项目文件夹（推荐 · 零上传）</label>
+      <div class="browser">
+        <div class="bpath" id="curpath">加载中…</div>
+        <ul class="dirs" id="dirs"></ul>
+      </div>
+      <button id="scanbtn" type="button">✅ 扫描当前文件夹 →</button>
+      <p class="hint">📂 在你电脑上点进项目目录，再点"扫描当前文件夹"。<b>服务端直接读取本机文件、零上传、不出本机</b>，自动跳过 node_modules，无需选 3 万个文件。</p>
       <div class="or">— 或 —</div>` : ''
 
   return page('ShellWard 合规体检', `
@@ -262,11 +288,30 @@ function formPage(local: boolean): string {
       <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
         <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
     </div>
-    ${local ? UPLOAD_SCRIPT : ''}`)
+    ${local ? BROWSE_SCRIPT : ''}`)
 }
 
-// 客户端：读取所选文件夹 → 过滤(跳过 node_modules 等、仅文本/配置、限大小) → POST 到本机服务
-// 注意：过滤后缀须与服务端 SCAN_EXT 对齐（含 .md），否则 markdown 项目会被全滤光显得"扫不了"。
+// 本地目录浏览器：点选文件夹 → 服务端直接扫（零上传，不读 node_modules）
+const BROWSE_SCRIPT = `<script>
+(function(){
+  var cur='';
+  function load(dir){
+    var cp=document.getElementById('curpath'); if(cp)cp.textContent='加载中…';
+    fetch('/browse?dir='+encodeURIComponent(dir||'')).then(function(r){return r.json()}).then(function(d){
+      if(d.error){ if(cp)cp.textContent='无法读取：'+d.error; return; }
+      cur=d.current; if(cp)cp.textContent=cur;
+      var ul=document.getElementById('dirs'); if(!ul)return; ul.innerHTML='';
+      if(d.parent){ var up=document.createElement('li'); up.className='up'; up.textContent='⬆ 上级目录'; up.onclick=function(){load(d.parent)}; ul.appendChild(up); }
+      if(!d.dirs.length){ var e=document.createElement('li'); e.className='empty'; e.textContent='（此目录无子文件夹，可直接点上方扫描）'; ul.appendChild(e); }
+      d.dirs.forEach(function(name){ var li=document.createElement('li'); li.textContent='📁 '+name; li.onclick=function(){ load(cur.replace(/\\/+$/,'')+'/'+name) }; ul.appendChild(li); });
+    }).catch(function(e){ if(cp)cp.textContent='错误：'+e; });
+  }
+  var sb=document.getElementById('scanbtn');
+  if(sb){ sb.onclick=function(){ if(cur){ sb.disabled=true; sb.textContent='扫描中…'; window.location.href='/scan?path='+encodeURIComponent(cur); } }; load(''); }
+})();
+</script>`
+
+// （旧上传脚本保留备用，当前本地模式改用目录浏览器）
 const UPLOAD_SCRIPT = `<script>
 (function(){
   var SKIP=/(^|\\/)(node_modules|\\.git|dist|build|\\.next|out|vendor|coverage|\\.venv|venv|__pycache__|target|\\.cache)(\\/|$)/;
@@ -337,6 +382,14 @@ form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
 color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
 .demo{margin:18px 0 0;font-size:13px;color:#475569}.demo a{font-weight:600}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;margin:4px 0 10px;text-align:left}
+.bpath{background:#0f172a;color:#93c5fd;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+padding:9px 12px;word-break:break-all}
+.dirs{list-style:none;margin:0;padding:0;max-height:240px;overflow-y:auto}
+.dirs li{padding:9px 14px;border-top:1px solid #eef2f7;cursor:pointer;font-size:14px}
+.dirs li:hover{background:#f1f5f9}
+.dirs li.up{color:#cb0000;font-weight:600}
+.dirs li.empty{color:#94a3b8;cursor:default;font-size:13px}
 .foot{margin:24px 0 0;font-size:12.5px;color:#94a3b8}.foot a,.back{color:#cb0000;text-decoration:none}
 .back{font-weight:600}
 </style></head><body>${body}</body></html>`
