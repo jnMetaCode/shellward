@@ -113,7 +113,7 @@ async function handleRepo(res: any, repo: string, locale: 'zh' | 'en', inc: () =
   try {
     await cloneRepo(v.url, dir)
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: v.url }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: v.url, backLink: '/' }))
   } catch (e: any) {
     const msg = esc(e?.message || String(e))
     send(res, 502, 'text/html', errorPage(
@@ -133,7 +133,7 @@ async function handleLocal(res: any, path: string, locale: 'zh' | 'en', inc: () 
   inc()
   try {
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, root)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root, backLink: '/' }))
   } finally {
     dec()
   }
@@ -176,7 +176,7 @@ async function handleUpload(req: any, res: any, locale: 'zh' | 'en', inc: () => 
     }
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
     const rootName = typeof payload.root === 'string' && payload.root ? payload.root : '(uploaded folder)'
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: rootName }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: rootName, backLink: '/' }))
   } catch (e: any) {
     send(res, 500, 'text/html', errorPage('扫描失败：' + esc(e?.message || String(e))))
   } finally {
@@ -226,7 +226,7 @@ function handleDemo(res: any, locale: 'zh' | 'en', inc: () => void, dec: () => v
     writeFileSync(join(dir, '.env'),
       'AWS_ACCESS_KEY=AKIARZ9MKP2QWLS7YV3N\nDB_PASSWORD=Sup3rS3cretProdPwd2026\n')
     const { report, scan } = runProjectComplianceAudit(DEFAULT_CONFIG, dir)
-    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: '示例项目（含风险）/ demo-ai-app' }))
+    send(res, 200, 'text/html', renderHtmlReport(report, scan, locale, { root: '示例项目（含风险）/ demo-ai-app', backLink: '/' }))
   } catch (e: any) {
     send(res, 500, 'text/html', errorPage('演示失败：' + esc(e?.message || String(e))))
   } finally {
@@ -261,34 +261,44 @@ function send(res: any, code: number, type: string, body: string) {
 function formPage(local: boolean): string {
   const urlForm = `
       <form action="/scan" method="get" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='扫描中…（大仓库需 10–60 秒，请勿重复点击）';">
-        <label>${local ? '② ' : ''}公开仓库地址</label>
+        <label>${local ? '③ ' : ''}公开仓库地址</label>
         <input name="repo" placeholder="https://github.com/owner/repo"${local ? '' : ' autofocus'}>
         <button type="submit">${local ? '体检该仓库 →' : '开始体检 →'}</button>
-        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时改用上方「选择文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
+        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时用上方「上传文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
       </form>`
 
-  const uploadForm = local ? `
-      <label>① 在本机点选项目文件夹（推荐 · 零上传）</label>
-      <div class="browser">
-        <div class="bpath" id="curpath">加载中…</div>
-        <ul class="dirs" id="dirs"></ul>
-      </div>
-      <button id="scanbtn" type="button">✅ 扫描当前文件夹 →</button>
-      <p class="hint">📂 在你电脑上点进项目目录，再点"扫描当前文件夹"。<b>服务端直接读取本机文件、零上传、不出本机</b>，自动跳过 node_modules，无需选 3 万个文件。</p>
+  // 本地模式：① 上传文件夹（一次选定，最方便）  ② 点选文件夹（零上传）  ③ URL
+  const localForms = local ? `
+      <form id="dirform">
+        <label>① 上传项目文件夹（最方便）</label>
+        <input type="file" id="dir" webkitdirectory directory multiple>
+        <button id="dbtn" type="submit">开始体检 →</button>
+        <div id="status" class="status"></div>
+        <p class="hint">选你的项目文件夹即可。<b>浏览器可能提示"上传 N 个文件"——放心：实际只发送源码/配置（自动跳过 node_modules、图片、超大文件），且只到<u>本机的本地服务</u>，不出本机。</b></p>
+      </form>
+      <details class="alt"><summary>不想上传？点选文件夹（零上传）</summary>
+        <label>② 在本机点选项目文件夹（零上传）</label>
+        <div class="browser">
+          <div class="bpath" id="curpath">加载中…</div>
+          <ul class="dirs" id="dirs"></ul>
+        </div>
+        <button id="scanbtn" type="button">✅ 扫描当前文件夹 →</button>
+        <p class="hint">服务端直接读取本机文件、零上传、不出本机，自动跳过 node_modules。</p>
+      </details>
       <div class="or">— 或 —</div>` : ''
 
   return page('ShellWard 合规体检', `
     <div class="hero">
       <div class="logo">🛡️ Shell<span>Ward</span> 合规网关</div>
       <h1>AI 应用合规体检</h1>
-      <p class="sub">${local ? '选项目文件夹或贴公开仓库链接' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
-      ${uploadForm}
+      <p class="sub">${local ? '上传/点选项目文件夹，或贴公开仓库链接' : '贴公开仓库链接'}，30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
+      ${localForms}
       ${urlForm}
       <p class="demo">🤔 觉得"秒出"不真？ <a href="/demo">▶ 看一个含风险的示例报告</a>（同样秒出，但满屏发现 + 行号）</p>
       <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
         <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
     </div>
-    ${local ? BROWSE_SCRIPT : ''}`)
+    ${local ? UPLOAD_SCRIPT + BROWSE_SCRIPT : ''}`)
 }
 
 // 本地目录浏览器：点选文件夹 → 服务端直接扫（零上传，不读 node_modules）
@@ -382,6 +392,9 @@ form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
 color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
 .demo{margin:18px 0 0;font-size:13px;color:#475569}.demo a{font-weight:600}
+details.alt{margin:6px 0 10px;text-align:left}
+details.alt summary{cursor:pointer;color:#cb0000;font-size:13px;font-weight:600;padding:6px 0}
+details.alt[open] summary{margin-bottom:8px}
 .browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;margin:4px 0 10px;text-align:left}
 .bpath{background:#0f172a;color:#93c5fd;font-family:ui-monospace,Menlo,monospace;font-size:12px;
 padding:9px 12px;word-break:break-all}

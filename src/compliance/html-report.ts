@@ -43,6 +43,8 @@ const SEV: Record<string, { zh: string; en: string }> = {
 export interface HtmlReportMeta {
   /** 扫描的项目根 */
   root: string
+  /** 可选：web 场景下的"返回/再扫一个"链接（CLI 导出时不传） */
+  backLink?: string
 }
 
 /** 生成自包含 HTML 合规报告 */
@@ -203,6 +205,7 @@ export function renderHtmlReport(
 <style>${CSS}</style>
 </head>
 <body>
+${meta.backLink ? `<div class="backbar"><a href="${esc(meta.backLink)}">← ${t('返回 / 再扫一个', 'Back / scan another')}</a></div>` : ''}
 <main>
   <header>
     <div class="brand">🛡️ Shell<span>Ward</span> <em>${t('合规网关', 'Compliance Gateway')}</em></div>
@@ -263,6 +266,10 @@ const CSS = `
 body{margin:0;background:var(--bg);color:var(--ink);
   font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
   -webkit-font-smoothing:antialiased}
+.backbar{position:sticky;top:0;z-index:9;background:#0f172a;padding:10px 24px}
+.backbar a{color:#fff;font-weight:600;font-size:14px;text-decoration:none}
+.backbar a:hover{color:#fca5a5}
+@media print{.backbar{display:none}}
 main{max-width:880px;margin:28px auto;background:var(--card);border-radius:16px;
   box-shadow:0 1px 3px rgba(15,23,42,.06),0 12px 32px rgba(15,23,42,.07);overflow:hidden}
 header{padding:30px 36px 22px;background:linear-gradient(180deg,#fafbfd,#fff);border-bottom:1px solid var(--line)}

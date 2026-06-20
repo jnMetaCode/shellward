@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.10] - 2026-06-21
+
+### Changed — web 客户端更易操作
+- **恢复「上传文件夹」为首选**（一次选定最方便），目录浏览器（零上传）收进折叠项作备选；上传仍自动跳过 node_modules，并说明"提示上传 N 个文件"是浏览器行为、实际只发源码/配置且不出本机
+- **报告页加「← 返回 / 再扫一个」顶栏**（web 场景）——扫完能回首页继续扫下一个，不再是死胡同
+- 报告 `HtmlReportMeta` 增 `backLink`（CLI 导出不受影响）
+
 ## [0.7.9] - 2026-06-20
 
 ### Changed — 「待确认」不再啰嗦/吓人
