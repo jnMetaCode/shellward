@@ -317,11 +317,12 @@ function checkEnv(c: ComplianceControl, env: EnvFacts): ControlResult {
     if (env.overseas.length > 0) {
       const names = env.overseas.map(o => o.provider_zh).join(', ')
       const namesEn = env.overseas.map(o => o.provider_en).join(', ')
-      return mk(c, 'fail',
-        `检测到境外大模型端点配置: ${names} — 若向其发送个人信息/重要数据即构成数据出境，须走合规路径`,
-        `Overseas LLM endpoint(s) configured: ${namesEn} — sending PI/important data = cross-border export`)
+      // 检出境外调用是"事实"，是否违规取决于是否发送 PII/重要数据 → 标"需评估"而非"不合规"
+      return mk(c, 'warn',
+        `检测到境外大模型调用: ${names}。是否违规取决于发送的数据：涉及个人信息/重要数据需走合规路径或改用境内模型；仅非个人/非重要数据通常可接受。`,
+        `Overseas LLM detected: ${namesEn}. Compliance depends on the data sent — PI/important data needs a compliant path; non-personal data is usually fine.`)
     }
-    return mk(c, 'pass', '未检测到境外大模型端点配置', 'No overseas LLM endpoint detected')
+    return mk(c, 'pass', '未检测到境外大模型调用', 'No overseas LLM detected')
   }
   return mk(c, 'manual', '需人工确认', 'Manual check required')
 }

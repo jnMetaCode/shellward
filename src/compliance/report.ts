@@ -130,7 +130,7 @@ export function renderComplianceReport(report: ComplianceReport, locale: 'zh' | 
 }
 
 const KIND_LABEL: Record<FindingKind, { zh: string; en: string; icon: string }> = {
-  overseas: { zh: '数据出境风险', en: 'Data export risk', icon: '🌐' },
+  overseas: { zh: '境外大模型调用（需评估出境）', en: 'Overseas LLM (assess export)', icon: '🌐' },
   secret: { zh: '硬编码密钥', en: 'Hardcoded secret', icon: '🔑' },
   pii: { zh: '个人信息暴露', en: 'PII exposure', icon: '🪪' },
   'env-perm': { zh: '.env 权限', en: '.env permission', icon: '📂' },

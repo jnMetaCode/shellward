@@ -20,7 +20,7 @@ const STATUS: Record<ControlStatus, { zh: string; en: string; cls: string }> = {
 }
 
 const KIND: Record<FindingKind, { zh: string; en: string; icon: string }> = {
-  overseas: { zh: '数据出境风险', en: 'Data export risk', icon: '🌐' },
+  overseas: { zh: '境外大模型调用（需评估出境）', en: 'Overseas LLM (assess export)', icon: '🌐' },
   secret: { zh: '硬编码密钥', en: 'Hardcoded secret', icon: '🔑' },
   pii: { zh: '个人信息暴露', en: 'PII exposure', icon: '🪪' },
   'env-perm': { zh: '.env 权限', en: '.env permission', icon: '📂' },
@@ -190,6 +190,22 @@ export function renderHtmlReport(
         <td class="${r.status === 'manual' ? 'faint' : ''}">${esc(zh ? r.detail_zh : r.detail_en)}</td></tr>`)
     }
     S.push('</tbody></table></div>')
+  }
+
+  // ===== 接入运行时指引：把 ⚪ 待核验项变成可验证（回答"需要接入才能测"）=====
+  if (report.staticScan && report.manual > 0) {
+    const cfg = `{
+  "mcpServers": {
+    "shellward": { "command": "npx", "args": ["-y", "-p", "shellward", "shellward-mcp"] }
+  }
+}`
+    S.push(sectionHead('🔌', t('让待核验项可验证：接入运行时', 'Make ⚪ items verifiable: deploy runtime'),
+      t('静态扫描测不了运行时行为，接入后这些项才能被持续验证', 'Static scan cannot test runtime behavior; deploy to validate')))
+    S.push(`<p class="note">${t(
+      `把下面这段加到 Claude Desktop / Cursor / OpenClaw 的 MCP 配置，重启后 ShellWard 就作为<b>运行时防护</b>在你的 AI 应用里运行——上方 ${report.manual} 项（审计留存、运行时拦截、数据外发管控等）即可被真实验证。`,
+      `Add this to your Claude Desktop / Cursor / OpenClaw MCP config and restart — ShellWard then runs as a <b>runtime guard</b>, validating the ${report.manual} ⚪ items above.`)}</p>`)
+    S.push(`<div class="cfg"><pre id="mcpcfg">${esc(cfg)}</pre><button onclick="(function(b){navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('mcpcfg').textContent).then(function(){b.textContent='${t('已复制', 'Copied')}'})})(this)">${t('复制', 'Copy')}</button></div>`)
+    S.push(`<p class="muted">${t('或命令行直接起：', 'Or run directly:')} <code>npx shellward mcp</code> · ${t('文档', 'Docs')}: <a href="https://github.com/jnMetaCode/shellward">github.com/jnMetaCode/shellward</a></p>`)
   }
 
   const disclaimer = t(
@@ -364,6 +380,12 @@ table.tbl td.right{width:64px}
 .manual-note{margin:8px 36px 12px;font-size:13px;color:#475569;background:#eff6ff;
   border-left:3px solid #3b82f6;line-height:1.6}
 .manual-note code{background:#dbeafe;padding:1px 6px;border-radius:5px}
+.cfg{position:relative;margin:8px 36px}
+.cfg pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;margin:0;
+  font-family:ui-monospace,Menlo,monospace;font-size:12.5px;overflow-x:auto;line-height:1.5}
+.cfg button{position:absolute;top:10px;right:12px;background:#1e293b;color:#94a3b8;border:0;
+  border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer}
+.cfg button:hover{color:#fff}
 
 /* 法规分组 */
 .reg{margin:14px 36px;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}

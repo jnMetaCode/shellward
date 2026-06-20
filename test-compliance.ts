@@ -78,7 +78,7 @@ const badFacts: EnvFacts = {
   const rootFail = bad.results.find(r => r.control.id === 'mlps-not-root')
   test('root 运行 → mlps-not-root = fail', rootFail?.status === 'fail')
   const exportFail = bad.results.find(r => r.control.id === 'cbdt-overseas-llm')
-  test('境外端点 → cbdt-overseas-llm = fail', exportFail?.status === 'fail')
+  test('境外端点 → cbdt-overseas-llm = warn（需评估，不武断判违规）', exportFail?.status === 'warn')
   const auditFail = bad.results.find(r => r.control.id === 'csl-audit-log')
   test('无审计日志 → csl-audit-log = fail', auditFail?.status === 'fail')
   test('坏环境得分 < 干净环境得分', bad.score < good.score, `${bad.score} vs ${good.score}`)

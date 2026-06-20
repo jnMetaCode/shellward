@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.13] - 2026-06-21
+
+### Changed — 数据出境改为「需评估」+ 报告内置「接入运行时」指引
+- **境外大模型调用不再武断判「不合规」**：检出"用了 OpenAI/Anthropic"是事实，是否违规取决于是否发送个人信息/重要数据——降为 **🟡 需评估**（控制项 fail→warn，端点 severity critical→high、依赖 high→medium），分类标签改「境外大模型调用（需评估出境）」。国内很多不发敏感数据的项目不再动辄 0 分 D
+- **报告内置「接入运行时」指引**：⚪ 待核验项需 ShellWard 运行时才能验证——报告里直接给**可复制的 MCP 配置**（贴到 Claude Desktop/Cursor 即接入），把"需要接入"变成一键可操作
+
 ## [0.7.12] - 2026-06-21
 
 ### Fixed — 上传报告"返回"失效
