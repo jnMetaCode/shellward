@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.16] - 2026-06-21
+
+### Changed — web 端展示重做（UI/产品/增长）
+- 本地客户端从"裸表单"升级为**完整产品页**：顶栏(logo+Star) + 价值主张 hero(标签+大标题+副述) + 体检卡片 + **「查什么」四宫格**(数据出境/密钥/个人信息/.env) + **信任栏**(不出本机/零依赖/开源/中文优先) + 页脚(公众号/GitHub)
+- 3 秒看懂"是什么、查什么、安不安全"；增长钩子：Star 按钮、示例演示、公众号
+- 移动端响应式（四宫格→两列）；保留统一路径栏 + 扫描遮罩
+
 ## [0.7.15] - 2026-06-21
 
 ### Changed — 本地客户端体验重做（用户反馈"体验不好"）

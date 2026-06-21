@@ -283,15 +283,42 @@ function formPage(local: boolean): string {
       <details class="alt"><summary>或：体检公开仓库 URL</summary>${urlForm}</details>` : ''
 
   return page('ShellWard 合规体检', `
-    <div class="hero">
-      <div class="logo">🛡️ Shell<span>Ward</span> 合规网关</div>
-      <h1>AI 应用合规体检</h1>
-      <p class="sub">${local ? '选你的项目，' : '贴公开仓库链接，'}30 秒查出数据出境 / 硬编码密钥 / 个人信息暴露等中国合规红线。</p>
-      ${local ? localForms : urlForm}
+    <nav class="nav">
+      <div class="logo">🛡️ Shell<span>Ward</span> <em>合规网关</em></div>
+      <a class="ghbtn" href="https://github.com/jnMetaCode/shellward" target="_blank">★ GitHub Star</a>
+    </nav>
+    <main class="wrap">
+      <header class="hd">
+        <div class="tag">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识</div>
+        <h1>30 秒，查出你的 AI 项目<br>踩了哪些 <span class="hl">中国合规红线</span></h1>
+        <p class="sub">数据出境 · 硬编码密钥 · 个人信息暴露 —— 精确到 <code>文件:行</code>，并给出境内替代建议。${local ? '<b>私有代码不出本机。</b>' : ''}</p>
+      </header>
+
+      <section class="card">
+        ${local ? localForms : urlForm}
+      </section>
+
+      <section class="checks">
+        <div class="chk"><span>🌐</span><b>数据出境</b><i>境外大模型端点/SDK</i></div>
+        <div class="chk"><span>🔑</span><b>硬编码密钥</b><i>OpenAI/GitHub/AWS…</i></div>
+        <div class="chk"><span>🪪</span><b>个人信息</b><i>身份证/手机/银行卡</i></div>
+        <div class="chk"><span>📂</span><b>.env 暴露</b><i>权限/明文密钥</i></div>
+      </section>
+
       <p class="demo">🤔 想先看效果？ <a href="/demo">▶ 看一个含风险的示例报告</a></p>
-      <p class="foot">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识 ｜ 零依赖 · 开源 ·
-        <a href="https://github.com/jnMetaCode/shellward">GitHub ⭐</a></p>
-    </div>
+
+      <section class="trust">
+        <div><b>🔒 ${local ? '不出本机' : '不存储代码'}</b>${local ? '服务端直读本机，零上传' : '公开仓库浅克隆，用完即删'}</div>
+        <div><b>📦 零依赖</b>可在信创/离线环境跑</div>
+        <div><b>⚖️ 开源</b>Apache-2.0，代码全公开</div>
+        <div><b>🇨🇳 中文优先</b>为中国监管而生</div>
+      </section>
+
+      <footer class="ft">
+        公众号「AI不止语」· 技术问答 · 实战文章&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="https://github.com/jnMetaCode/shellward" target="_blank">github.com/jnMetaCode/shellward</a> · Apache-2.0
+      </footer>
+    </main>
     <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">扫描中…</div></div>
     ${local ? BROWSE_SCRIPT : ''}`)
 }
@@ -366,55 +393,59 @@ function page(title: string, body: string): string {
   return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;
-background:linear-gradient(135deg,#eef1f6,#e2e8f0);color:#0f172a;
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#f4f7fb,#e8edf4);color:#0f172a;
 font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-.hero{background:#fff;max-width:580px;width:92%;margin:40px;padding:38px 40px 34px;border-radius:18px;
-box-shadow:0 12px 40px rgba(15,23,42,.12);text-align:center;border-top:4px solid #cb0000}
-.logo{font-weight:800;font-size:15px;letter-spacing:.2px}.logo span{color:#cb0000}
-h1{font-size:29px;margin:12px 0 8px;letter-spacing:-.5px}
-.sub{color:#64748b;margin:0 0 24px;font-size:15px}
+a{color:#cb0000;text-decoration:none}
+.nav{display:flex;justify-content:space-between;align-items:center;max-width:760px;margin:0 auto;padding:18px 24px}
+.logo{font-weight:800;font-size:17px}.logo span{color:#cb0000}
+.logo em{font-style:normal;color:#94a3b8;font-weight:600;font-size:13px;margin-left:5px}
+.ghbtn{border:1px solid #cbd5e1;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;color:#0f172a;background:#fff;transition:.15s}
+.ghbtn:hover{border-color:#cb0000;color:#cb0000}
+.wrap{max-width:760px;margin:0 auto;padding:0 24px 48px}
+.hd{text-align:center;padding:22px 0 26px}
+.tag{display:inline-block;background:#fef2f2;color:#cb0000;font-size:12px;font-weight:700;padding:5px 14px;border-radius:999px;margin-bottom:16px}
+h1{font-size:34px;line-height:1.25;margin:0 0 12px;letter-spacing:-.6px}
+h1 .hl{color:#cb0000}
+.sub{color:#475569;font-size:16px;max-width:580px;margin:0 auto}
+.sub code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:14px}
+.card{background:#fff;border-radius:16px;padding:24px 26px;box-shadow:0 10px 30px rgba(15,23,42,.10);border-top:3px solid #cb0000}
 form{display:flex;flex-direction:column;gap:10px;text-align:left}
 label{font-size:13px;font-weight:700;color:#334155}
-input{padding:14px 16px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;width:100%}
+input{padding:14px 16px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px;width:100%}
 input:focus{outline:none;border-color:#cb0000;box-shadow:0 0 0 3px rgba(203,0,0,.12)}
-.hint{font-size:12.5px;color:#64748b;margin:2px 0 6px;line-height:1.55}
-.hint code{background:#f1f5f9;padding:1px 6px;border-radius:5px}
-/* 文件选择器：美化成虚线投放区 + 红色按钮 */
-input[type=file]{width:100%;padding:20px 16px;border:2px dashed #cbd5e1;border-radius:12px;
-background:#f8fafc;cursor:pointer;font-size:14px;color:#64748b;transition:.15s}
-input[type=file]:hover{border-color:#cb0000;background:#fff}
-input[type=file]::file-selector-button{background:#cb0000;color:#fff;border:0;border-radius:8px;
-padding:9px 18px;margin-right:14px;font-weight:700;font-size:14px;cursor:pointer}
-input[type=file]::file-selector-button:hover{background:#a80000}
-button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;
-font-weight:700;cursor:pointer;margin-top:4px;transition:.15s}button:hover{background:#a80000}
-button:disabled{background:#94a3b8;cursor:default}
-form{margin:0 0 14px}.or{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 14px}
-.status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;
-color:#334155;font-size:13.5px;border-left:3px solid #cb0000;text-align:left}
-.pathrow{display:flex;gap:8px}
+button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
+button:hover{background:#a80000}button:disabled{background:#94a3b8;cursor:default}
+.hint{font-size:12.5px;color:#64748b;margin:8px 0 0;line-height:1.55}
+code,.hint code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:12.5px}
+.pathrow{display:flex;gap:8px;margin-top:6px}
 .pathrow input{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px}
-.pathrow button{margin-top:0;white-space:nowrap;padding:14px 22px}
-.demo{margin:18px 0 0;font-size:13px;color:#475569}.demo a{font-weight:600}
-.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99;
-flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px;font-size:15px;font-weight:600}
-.spin{width:46px;height:46px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;
-border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-details.alt{margin:6px 0 10px;text-align:left}
-details.alt summary{cursor:pointer;color:#cb0000;font-size:13px;font-weight:600;padding:6px 0}
-details.alt[open] summary{margin-bottom:8px}
-.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;margin:4px 0 10px;text-align:left}
-.bpath{background:#0f172a;color:#93c5fd;font-family:ui-monospace,Menlo,monospace;font-size:12px;
-padding:9px 12px;word-break:break-all}
-.dirs{list-style:none;margin:0;padding:0;max-height:240px;overflow-y:auto}
+.pathrow button{padding:14px 22px;white-space:nowrap}
+.browser{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:10px 0 0;text-align:left}
+.dirs{list-style:none;margin:0;padding:0;max-height:200px;overflow-y:auto}
 .dirs li{padding:9px 14px;border-top:1px solid #eef2f7;cursor:pointer;font-size:14px}
-.dirs li:hover{background:#f1f5f9}
-.dirs li.up{color:#cb0000;font-weight:600}
-.dirs li.empty{color:#94a3b8;cursor:default;font-size:13px}
-.foot{margin:24px 0 0;font-size:12.5px;color:#94a3b8}.foot a,.back{color:#cb0000;text-decoration:none}
-.back{font-weight:600}
+.dirs li:first-child{border-top:0}.dirs li:hover{background:#f8fafc}
+.dirs li.up{color:#cb0000;font-weight:600}.dirs li.empty{color:#94a3b8;cursor:default;font-size:13px}
+details.alt{margin:14px 0 0;border-top:1px dashed #e2e8f0;padding-top:12px}
+details.alt summary{cursor:pointer;color:#cb0000;font-size:13px;font-weight:600}
+details.alt[open] summary{margin-bottom:10px}
+.checks{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.chk{background:#fff;border:1px solid #eef2f7;border-radius:12px;padding:16px 10px;text-align:center}
+.chk span{font-size:24px;display:block;margin-bottom:6px}
+.chk b{display:block;font-size:14px}.chk i{font-style:normal;color:#94a3b8;font-size:11px;display:block;margin-top:3px}
+.demo{text-align:center;font-size:13.5px;color:#475569;margin:6px 0 22px}.demo a{font-weight:700}
+.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 26px}
+.trust div{background:#f8fafc;border-radius:10px;padding:14px 12px;font-size:11.5px;color:#64748b;line-height:1.5}
+.trust b{display:block;color:#0f172a;font-size:13px;margin-bottom:3px}
+.ft{text-align:center;color:#94a3b8;font-size:12.5px;padding-top:14px;border-top:1px solid #e3e9f1}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99;
+flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px;font-size:15px;font-weight:600}
+.spin{width:46px;height:46px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* 错误页复用 */
+.hero{background:#fff;max-width:520px;margin:60px auto;padding:36px;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.1);text-align:center}
+.hero .logo{font-size:15px}.back{font-weight:600}
+@media(max-width:560px){h1{font-size:26px}.checks,.trust{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>${body}</body></html>`
 }
 
