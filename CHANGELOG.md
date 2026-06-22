@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.17] - 2026-06-23
+
+### Added
+- README 加入**客户端与体检报告界面截图**（界面预览）——GitHub/npm 页面直观展示产品长什么样（用绝对 raw URL，两端都能显示）
+
 ## [0.7.16] - 2026-06-21
 
 ### Changed — web 端展示重做（UI/产品/增长）
