@@ -271,15 +271,16 @@ function formPage(local: boolean): string {
         <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时用上方「上传文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
       </form>`
 
-  // 本地模式：上传项目文件夹（浏览器选文件夹 → 仅发送源码/配置到本机服务扫描）
+  // 本地模式：主推命令行 --open（最干净）；网页内用路径输入（无浏览器上传弹框）
   const localForms = local ? `
-      <form id="dirform">
-        <label>选择项目文件夹，开始体检</label>
-        <input type="file" id="dir" webkitdirectory directory multiple>
-        <button id="dbtn" type="submit">开始体检 →</button>
-        <div id="status" class="status"></div>
-        <p class="hint">📂 选你的项目文件夹即可。浏览器可能提示"上传 N 个文件"——<b>实际只发送源码/配置（自动跳过 node_modules、图片、超大文件），且只到本机的本地服务、不出本机</b>。</p>
-      </form>
+      <div class="rec">💡 <b>最干净的方式</b>：在你的项目目录运行 <code>npx shellward scan --open</code> —— 自动出报告、在浏览器打开，<b>无需上传、无弹框</b>。或在下方直接体检：</div>
+      <label>体检本地项目（服务端直读本机 · 零上传 · 无弹框）</label>
+      <div class="pathrow">
+        <input id="pathbar" placeholder="粘贴项目绝对路径，或在下方点选文件夹" spellcheck="false" autocomplete="off">
+        <button id="scanbtn" type="button">体检 →</button>
+      </div>
+      <div class="browser"><ul class="dirs" id="dirs"></ul></div>
+      <p class="hint">粘贴路径直接体检，或点文件夹进入；自动跳过 node_modules。私有代码<b>不上传、不出本机、无浏览器弹框</b>。</p>
       <details class="alt"><summary>或：体检公开仓库 URL</summary>${urlForm}</details>` : ''
 
   return page('ShellWard 合规体检', `
@@ -320,7 +321,7 @@ function formPage(local: boolean): string {
       </footer>
     </main>
     <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">扫描中…</div></div>
-    ${local ? UPLOAD_SCRIPT : ''}`)
+    ${local ? BROWSE_SCRIPT : ''}`)
 }
 
 // 本地：统一路径栏 + 目录浏览器。粘贴路径 / 点选填充 → 服务端直接扫（零上传，跳过 node_modules）
@@ -424,6 +425,8 @@ input[type=file]::file-selector-button:hover{background:#a80000}
 .status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;color:#334155;font-size:13.5px;border-left:3px solid #cb0000}
 .hint{font-size:12.5px;color:#64748b;margin:8px 0 0;line-height:1.55}
 code,.hint code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:12.5px}
+.rec{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#0c4a6e;line-height:1.6}
+.rec code{background:#0f172a;color:#7dd3fc;padding:2px 8px;border-radius:6px;font-size:12.5px}
 .pathrow{display:flex;gap:8px;margin-top:6px}
 .pathrow input{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px}
 .pathrow button{padding:14px 22px;white-space:nowrap}

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.19] - 2026-06-23
+
+### Changed — 消除浏览器"上传到此网站"弹框
+- 浏览器选文件夹（webkitdirectory）必然触发原生"上传 N 个文件到此网站"弹框（浏览器安全机制，代码无法去除，观感"不正规"）
+- **主推 `npx shellward scan --open`**：在项目目录一行命令，自动出报告并在浏览器打开——无上传、无弹框、无需路径、不出本机（最干净）
+- web 客户端本地输入改回**路径栏 + 目录浏览**（服务端直读，**无浏览器弹框**），并在页面顶部推荐 `--open`
+- README 首屏改为主推 `--open`
+
 ## [0.7.18] - 2026-06-23
 
 ### Changed

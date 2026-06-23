@@ -47,7 +47,7 @@ npx shellward scan
 
 > 检测重点：**境外大模型端点与 SDK 依赖（数据出境——中国独有、英文工具没有的概念）**、硬编码密钥、文件中的中文 PII、`.env` 暴露。扫到境外模型（如 `openai` 依赖）时，**直接给出境内合规替代**（通义千问 / DeepSeek / Kimi / 智谱）及其 OpenAI 兼容 `base_url`——多数迁移只需改一个 `base_url`。
 
-想要图形界面、不用命令行？`npx shellward web --local` —— 浏览器打开，**上传项目文件夹**即可体检，私有代码不出本机。
+**想在浏览器里看报告？** 在项目目录跑 `npx shellward scan --open` —— 自动扫描并在浏览器打开报告，**无需上传、无弹框、数据不出本机**（最干净）。也可 `npx shellward web --local` 起本地图形界面（粘贴/点选路径，服务端直读）。
 
 更多命令、运行时防护（MCP / 插件）、与英文文档见下方 [English](#english) 章节。
 
