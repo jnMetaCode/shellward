@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.18] - 2026-06-23
+
+### Changed
+- 本地客户端输入方式改回**「上传项目文件夹」**（替代路径选择/浏览），文件夹选择器为虚线投放区 + 状态提示；仅发送源码/配置、跳过 node_modules、不出本机
+- 移除 README 界面截图（待 UI 稳定后再补）
+
 ## [0.7.17] - 2026-06-23
 
 ### Added

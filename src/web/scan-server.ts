@@ -271,15 +271,15 @@ function formPage(local: boolean): string {
         <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时用上方「上传文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
       </form>`
 
-  // 本地模式：统一「路径栏（可粘贴/可浏览填充）+ 体检按钮」，无上传、无吓人弹窗、无选择困难
+  // 本地模式：上传项目文件夹（浏览器选文件夹 → 仅发送源码/配置到本机服务扫描）
   const localForms = local ? `
-      <label>体检本地项目（直接读本机文件 · 零上传 · 不出本机）</label>
-      <div class="pathrow">
-        <input id="pathbar" placeholder="粘贴项目路径，或在下方点选" spellcheck="false" autocomplete="off">
-        <button id="scanbtn" type="button">体检 →</button>
-      </div>
-      <div class="browser"><ul class="dirs" id="dirs"></ul></div>
-      <p class="hint">📂 粘贴路径直接体检，或点文件夹进入；自动跳过 node_modules。私有代码<b>不上传、不出本机</b>。</p>
+      <form id="dirform">
+        <label>选择项目文件夹，开始体检</label>
+        <input type="file" id="dir" webkitdirectory directory multiple>
+        <button id="dbtn" type="submit">开始体检 →</button>
+        <div id="status" class="status"></div>
+        <p class="hint">📂 选你的项目文件夹即可。浏览器可能提示"上传 N 个文件"——<b>实际只发送源码/配置（自动跳过 node_modules、图片、超大文件），且只到本机的本地服务、不出本机</b>。</p>
+      </form>
       <details class="alt"><summary>或：体检公开仓库 URL</summary>${urlForm}</details>` : ''
 
   return page('ShellWard 合规体检', `
@@ -320,7 +320,7 @@ function formPage(local: boolean): string {
       </footer>
     </main>
     <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">扫描中…</div></div>
-    ${local ? BROWSE_SCRIPT : ''}`)
+    ${local ? UPLOAD_SCRIPT : ''}`)
 }
 
 // 本地：统一路径栏 + 目录浏览器。粘贴路径 / 点选填充 → 服务端直接扫（零上传，跳过 node_modules）
@@ -416,6 +416,12 @@ input{padding:14px 16px;border:1px solid #cbd5e1;border-radius:10px;font-size:15
 input:focus{outline:none;border-color:#cb0000;box-shadow:0 0 0 3px rgba(203,0,0,.12)}
 button{background:#cb0000;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
 button:hover{background:#a80000}button:disabled{background:#94a3b8;cursor:default}
+/* 文件夹选择：虚线投放区 + 红色按钮 */
+input[type=file]{width:100%;padding:22px 16px;border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:14px;color:#64748b;transition:.15s}
+input[type=file]:hover{border-color:#cb0000;background:#fff}
+input[type=file]::file-selector-button{background:#cb0000;color:#fff;border:0;border-radius:8px;padding:9px 18px;margin-right:14px;font-weight:700;font-size:14px;cursor:pointer}
+input[type=file]::file-selector-button:hover{background:#a80000}
+.status{display:none;margin:10px 0 0;padding:10px 14px;border-radius:8px;background:#f1f5f9;color:#334155;font-size:13.5px;border-left:3px solid #cb0000}
 .hint{font-size:12.5px;color:#64748b;margin:8px 0 0;line-height:1.55}
 code,.hint code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:12.5px}
 .pathrow{display:flex;gap:8px;margin-top:6px}

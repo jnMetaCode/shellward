@@ -38,7 +38,7 @@ async function main() {
   test('服务启动并响应', up)
   if (up) {
     const home = await (await fetch(base + '/')).text()
-    test('首页含路径栏 + 目录浏览器', home.includes('pathbar') && home.includes('id="dirs"'))
+    test('首页含上传文件夹表单', home.includes('webkitdirectory') && home.includes('dirform'))
     test('首页含 URL 入口', home.includes('公开仓库地址'))
 
     // 目录浏览器：列子目录（零上传）
@@ -98,7 +98,7 @@ async function main() {
   test('公网服务启动', pup)
   if (pup) {
     const phome = await (await fetch(pbase + '/')).text()
-    test('公网首页不含本地路径栏（只 URL）', !phome.includes('pathbar') && phome.includes('公开仓库地址'))
+    test('公网首页不含本地上传（只 URL）', !phome.includes('webkitdirectory') && phome.includes('公开仓库地址'))
     // 公网模式禁止目录浏览（防止扫服务器硬盘）
     const browseBlocked = await fetch(pbase + '/browse?dir=/etc')
     test('公网模式拒绝目录浏览 (403)', browseBlocked.status === 403, `status=${browseBlocked.status}`)
