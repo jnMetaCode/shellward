@@ -44,6 +44,15 @@ export function validateRepoUrl(input: string): { ok: true; url: string } | { ok
 // 报告「返回」链接：本地模式用绝对地址（上传报告经 blob: URL 打开，相对 '/' 会失效）
 let SERVER_BASE = '/'
 
+/** 决定本次请求语言：?lang=en|zh 优先，其次 Accept-Language，最后服务端默认 */
+function langOf(req: any, fallback: 'zh' | 'en'): 'zh' | 'en' {
+  const m = /[?&]lang=(en|zh)\b/.exec(req.url || '')
+  if (m) return m[1] as 'zh' | 'en'
+  const al = String(req.headers?.['accept-language'] || '')
+  if (/\ben\b/i.test(al) && !/zh/i.test(al)) return 'en'
+  return fallback
+}
+
 export function startWebServer(opts: WebServerOptions): void {
   const locale = resolveLocale(DEFAULT_CONFIG)
   const host = opts.local ? '127.0.0.1' : '0.0.0.0'
@@ -51,47 +60,49 @@ export function startWebServer(opts: WebServerOptions): void {
   let active = 0
 
   const server = createServer(async (req, res) => {
+    const lang = langOf(req, locale)
+    const T = (zh: string, en: string) => (lang === 'en' ? en : zh)
     try {
       const u = new URL(req.url || '/', `http://localhost:${opts.port}`)
       if (u.pathname === '/' || u.pathname === '') {
-        return send(res, 200, 'text/html', formPage(!!opts.local))
+        return send(res, 200, 'text/html', formPage(!!opts.local, lang))
       }
       // 本地客户端：选文件夹上传（仅本地模式；数据只到 localhost、不出本机）
       if (u.pathname === '/scan-files' && req.method === 'POST') {
-        if (!opts.local) return send(res, 403, 'text/html', errorPage('公网模式不支持上传；请用「公开仓库 URL」。'))
-        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
-        return await handleUpload(req, res, locale, () => { active++ }, () => { active-- })
+        if (!opts.local) return send(res, 403, 'text/html', errorPage(T('公网模式不支持上传；请用「公开仓库 URL」。', 'Upload not supported in public mode; use a public repo URL.'), lang))
+        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage(T('服务繁忙，请稍后再试', 'Server busy, try again later'), lang))
+        return await handleUpload(req, res, lang, () => { active++ }, () => { active-- })
       }
       // 本地目录浏览（仅本地模式）：服务端直接列子目录，让用户点选要扫的文件夹（零上传）
       if (u.pathname === '/browse') {
-        if (!opts.local) return send(res, 403, 'application/json', JSON.stringify({ error: '仅本地模式可用' }))
+        if (!opts.local) return send(res, 403, 'application/json', JSON.stringify({ error: 'local mode only' }))
         return handleBrowse(res, u.searchParams.get('dir'))
       }
       // 演示：扫一个内置的「含风险样例项目」——证明"秒出≠没检查"（满屏发现 + 行号）
       if (u.pathname === '/demo') {
-        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试'))
-        return handleDemo(res, locale, () => { active++ }, () => { active-- })
+        if (active >= MAX_CONCURRENT) return send(res, 503, 'text/html', errorPage(T('服务繁忙，请稍后再试', 'Server busy, try again later'), lang))
+        return handleDemo(res, lang, () => { active++ }, () => { active-- })
       }
       if (u.pathname === '/scan') {
         if (active >= MAX_CONCURRENT) {
-          return send(res, 503, 'text/html', errorPage('服务繁忙，请稍后再试（并发上限）'))
+          return send(res, 503, 'text/html', errorPage(T('服务繁忙，请稍后再试（并发上限）', 'Server busy (concurrency limit)'), lang))
         }
         const repo = u.searchParams.get('repo')
         const path = u.searchParams.get('path')
 
         // 本地路径扫描：仅本地模式开放
         if (path) {
-          if (!opts.local) return send(res, 403, 'text/html', errorPage('公网模式不支持本地路径扫描；请用「公开仓库 URL」，私有代码请用本地 CLI：npx shellward scan'))
-          return await handleLocal(res, path, locale, () => { active++ }, () => { active-- })
+          if (!opts.local) return send(res, 403, 'text/html', errorPage(T('公网模式不支持本地路径扫描；请用「公开仓库 URL」。', 'Local path scan not supported in public mode; use a public repo URL.'), lang))
+          return await handleLocal(res, path, lang, () => { active++ }, () => { active-- })
         }
         if (repo) {
-          return await handleRepo(res, repo, locale, () => { active++ }, () => { active-- })
+          return await handleRepo(res, repo, lang, () => { active++ }, () => { active-- })
         }
-        return send(res, 400, 'text/html', errorPage('缺少参数：repo（仓库 URL）' + (opts.local ? ' 或 path（本地路径）' : '')))
+        return send(res, 400, 'text/html', errorPage(T('缺少参数：repo 或 path', 'Missing parameter: repo or path'), lang))
       }
-      send(res, 404, 'text/html', errorPage('页面不存在'))
+      send(res, 404, 'text/html', errorPage(T('页面不存在', 'Not found'), lang))
     } catch (e: any) {
-      send(res, 500, 'text/html', errorPage('内部错误：' + esc(e?.message || String(e))))
+      send(res, 500, 'text/html', errorPage(T('内部错误：', 'Internal error: ') + esc(e?.message || String(e)), lang))
     }
   })
 
@@ -262,37 +273,42 @@ function send(res: any, code: number, type: string, body: string) {
   res.end(body)
 }
 
-function formPage(local: boolean): string {
+function formPage(local: boolean, lang: 'zh' | 'en' = 'zh'): string {
+  const t = (z: string, e: string) => (lang === 'en' ? e : z)
+  const lq = `lang=${lang}`
   const urlForm = `
-      <form action="/scan" method="get" onsubmit="var b=this.querySelector('button');b.disabled=true;b.textContent='扫描中…（大仓库需 10–60 秒，请勿重复点击）';">
-        <label>公开仓库地址</label>
+      <form action="/scan" method="get" onsubmit="var b=this.querySelector('button.go');b.disabled=true;b.textContent='${t('扫描中…（大仓库需 10–60 秒）', 'Scanning… (large repos 10–60s)')}';">
+        <input type="hidden" name="lang" value="${lang}">
+        <label>${t('公开仓库地址', 'Public repository URL')}</label>
         <input name="repo" placeholder="https://github.com/owner/repo"${local ? '' : ' autofocus'}>
-        <button type="submit">${local ? '体检该仓库 →' : '开始体检 →'}</button>
-        <p class="hint">仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时——${local ? '此时用上方「上传文件夹」更稳。' : '<b>大仓库 / 私有代码请用本地客户端或 CLI</b>：<code>npx shellward web --local</code> / <code>npx shellward scan</code>（不上传）。'}</p>
+        <button type="submit" class="go">${t(local ? '体检该仓库 →' : '开始体检 →', 'Scan →')}</button>
+        <p class="hint">${t('仅支持公开仓库（GitHub / GitLab / Gitee / Bitbucket）。大仓库可能超时；私有代码请用本地客户端或 <code>npx shellward scan</code>（不上传）。', 'Public repos only (GitHub/GitLab/Gitee/Bitbucket). Large repos may time out; for private code use the local client or <code>npx shellward scan</code> (no upload).')}</p>
       </form>`
 
-  // 本地模式：主推命令行 --open（最干净）；网页内用路径输入（无浏览器上传弹框）
   const localForms = local ? `
-      <div class="rec">💡 <b>最干净的方式</b>：在你的项目目录运行 <code>npx shellward scan --open</code> —— 自动出报告、在浏览器打开，<b>无需上传、无弹框</b>。或在下方直接体检：</div>
-      <label>体检本地项目（服务端直读本机 · 零上传 · 无弹框）</label>
+      <div class="rec">💡 <b>${t('最干净的方式', 'Cleanest way')}</b>：${t('在项目目录运行', 'run in your project dir')} <code>npx shellward scan --open</code> —— ${t('自动出报告、浏览器打开，无需上传、无弹框。或在下方直接体检：', 'auto-opens the report in your browser. No upload, no dialog. Or scan below:')}</div>
+      <label>${t('体检本地项目（服务端直读本机 · 零上传 · 无弹框）', 'Scan a local project (read directly · no upload · no dialog)')}</label>
       <div class="pathrow">
-        <input id="pathbar" placeholder="粘贴项目绝对路径，或在下方点选文件夹" spellcheck="false" autocomplete="off">
-        <button id="scanbtn" type="button">体检 →</button>
+        <input id="pathbar" placeholder="${t('粘贴项目绝对路径，或在下方点选文件夹', 'Paste an absolute project path, or browse below')}" spellcheck="false" autocomplete="off">
+        <button id="scanbtn" type="button">${t('体检 →', 'Scan →')}</button>
       </div>
       <div class="browser"><ul class="dirs" id="dirs"></ul></div>
-      <p class="hint">粘贴路径直接体检，或点文件夹进入；自动跳过 node_modules。私有代码<b>不上传、不出本机、无浏览器弹框</b>。</p>
-      <details class="alt"><summary>或：体检公开仓库 URL</summary>${urlForm}</details>` : ''
+      <p class="hint">${t('粘贴路径直接体检，或点文件夹进入；自动跳过 node_modules。私有代码<b>不上传、不出本机、无浏览器弹框</b>。', 'Paste a path or click into folders; node_modules auto-skipped. Private code <b>never uploaded, never leaves your machine, no browser dialog</b>.')}</p>
+      <details class="alt"><summary>${t('或：体检公开仓库 URL', 'Or: scan a public repo URL')}</summary>${urlForm}</details>` : ''
 
-  return page('ShellWard 合规体检', `
+  return page(t('ShellWard 合规体检', 'ShellWard Compliance Scan'), `
     <nav class="nav">
-      <div class="logo">🛡️ Shell<span>Ward</span> <em>合规网关</em></div>
-      <a class="ghbtn" href="https://github.com/jnMetaCode/shellward" target="_blank">★ GitHub Star</a>
+      <div class="logo">🛡️ Shell<span>Ward</span> <em>${t('合规网关', 'Compliance Gateway')}</em></div>
+      <div class="navr">
+        <a class="lang ${lang === 'zh' ? 'on' : ''}" href="/?lang=zh">中文</a><a class="lang ${lang === 'en' ? 'on' : ''}" href="/?lang=en">EN</a>
+        <a class="ghbtn" href="https://github.com/jnMetaCode/shellward" target="_blank">★ Star</a>
+      </div>
     </nav>
     <main class="wrap">
       <header class="hd">
-        <div class="tag">网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识</div>
-        <h1>30 秒，查出你的 AI 项目<br>踩了哪些 <span class="hl">中国合规红线</span></h1>
-        <p class="sub">数据出境 · 硬编码密钥 · 个人信息暴露 —— 精确到 <code>文件:行</code>，并给出境内替代建议。${local ? '<b>私有代码不出本机。</b>' : ''}</p>
+        <div class="tag">${t('网安法 2026 · PIPL · 等保2.0 · 数据出境 · AI标识', 'CSL 2026 · PIPL · MLPS 2.0 · Cross-border · AI labeling')}</div>
+        <h1>${t('30 秒，查出你的 AI 项目<br>踩了哪些 <span class="hl">中国合规红线</span>', 'Find which <span class="hl">China compliance lines</span><br>your AI project crosses — in 30s')}</h1>
+        <p class="sub">${t('数据出境 · 硬编码密钥 · 个人信息暴露 —— 精确到 <code>文件:行</code>，并给出境内替代建议。', 'Data export · hardcoded secrets · PII — pinpointed to <code>file:line</code>, with domestic alternatives.')}${local ? t('<b>私有代码不出本机。</b>', ' <b>Private code stays local.</b>') : ''}</p>
       </header>
 
       <section class="card">
@@ -300,28 +316,28 @@ function formPage(local: boolean): string {
       </section>
 
       <section class="checks">
-        <div class="chk"><span>🌐</span><b>数据出境</b><i>境外大模型端点/SDK</i></div>
-        <div class="chk"><span>🔑</span><b>硬编码密钥</b><i>OpenAI/GitHub/AWS…</i></div>
-        <div class="chk"><span>🪪</span><b>个人信息</b><i>身份证/手机/银行卡</i></div>
-        <div class="chk"><span>📂</span><b>.env 暴露</b><i>权限/明文密钥</i></div>
+        <div class="chk"><span>🌐</span><b>${t('数据出境', 'Data export')}</b><i>${t('境外大模型端点/SDK', 'overseas LLM endpoints/SDK')}</i></div>
+        <div class="chk"><span>🔑</span><b>${t('硬编码密钥', 'Hardcoded keys')}</b><i>OpenAI/GitHub/AWS…</i></div>
+        <div class="chk"><span>🪪</span><b>${t('个人信息', 'PII')}</b><i>${t('身份证/手机/银行卡', 'ID/phone/bank card')}</i></div>
+        <div class="chk"><span>📂</span><b>.env</b><i>${t('权限/明文密钥', 'perms/plaintext keys')}</i></div>
       </section>
 
-      <p class="demo">🤔 想先看效果？ <a href="/demo">▶ 看一个含风险的示例报告</a></p>
+      <p class="demo">🤔 ${t('想先看效果？', 'Want to see it first?')} <a href="/demo?${lq}">▶ ${t('看一个含风险的示例报告', 'See a sample report with risks')}</a></p>
 
       <section class="trust">
-        <div><b>🔒 ${local ? '不出本机' : '不存储代码'}</b>${local ? '服务端直读本机，零上传' : '公开仓库浅克隆，用完即删'}</div>
-        <div><b>📦 零依赖</b>可在信创/离线环境跑</div>
-        <div><b>⚖️ 开源</b>Apache-2.0，代码全公开</div>
-        <div><b>🇨🇳 中文优先</b>为中国监管而生</div>
+        <div><b>🔒 ${local ? t('不出本机', 'Stays local') : t('不存储代码', 'No code stored')}</b>${local ? t('服务端直读本机，零上传', 'read locally, zero upload') : t('浅克隆，用完即删', 'shallow clone, deleted after')}</div>
+        <div><b>📦 ${t('零依赖', 'Zero deps')}</b>${t('信创/离线可跑', 'runs offline')}</div>
+        <div><b>⚖️ ${t('开源', 'Open source')}</b>Apache-2.0</div>
+        <div><b>🇨🇳 ${t('中文优先', 'China-first')}</b>${t('为中国监管而生', 'built for CN regs')}</div>
       </section>
 
       <footer class="ft">
-        公众号「AI不止语」· 技术问答 · 实战文章&nbsp;&nbsp;|&nbsp;&nbsp;
+        ${t('公众号「AI不止语」', 'WeChat: AI不止语')}&nbsp;&nbsp;|&nbsp;&nbsp;
         <a href="https://github.com/jnMetaCode/shellward" target="_blank">github.com/jnMetaCode/shellward</a> · Apache-2.0
       </footer>
     </main>
-    <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">扫描中…</div></div>
-    ${local ? BROWSE_SCRIPT : ''}`)
+    <div id="overlay" class="overlay"><div class="spin"></div><div id="ovtext">${t('扫描中…', 'Scanning…')}</div></div>
+    ${local ? `<script>window.__SWLANG=${JSON.stringify(lang)}</script>` + BROWSE_SCRIPT : ''}`)
 }
 
 // 本地：统一路径栏 + 目录浏览器。粘贴路径 / 点选填充 → 服务端直接扫（零上传，跳过 node_modules）
@@ -338,7 +354,7 @@ const BROWSE_SCRIPT = `<script>
       li.onclick=function(){ load((pb.value||'').replace(/\\/+$/,'')+'/'+name) }; ul.appendChild(li); });
   }
   function load(dir){ fetch('/browse?dir='+encodeURIComponent(dir||'')).then(function(r){return r.json()}).then(render).catch(function(e){ ul.innerHTML='<li class="empty">错误：'+e+'</li>'; }); }
-  function scan(){ var p=(pb.value||'').trim(); if(!p){ pb.focus(); return; } document.getElementById('overlay').style.display='flex'; window.location.href='/scan?path='+encodeURIComponent(p); }
+  function scan(){ var p=(pb.value||'').trim(); if(!p){ pb.focus(); return; } document.getElementById('overlay').style.display='flex'; window.location.href='/scan?path='+encodeURIComponent(p)+'&lang='+(window.__SWLANG||'zh'); }
   sb.onclick=scan;
   pb.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); load(pb.value); } });
   load(''); // 从家目录起
@@ -384,10 +400,11 @@ const UPLOAD_SCRIPT = `<script>
 })();
 </script>`
 
-function errorPage(msg: string): string {
-  return page('出错了', `<div class="hero"><div class="logo">🛡️ Shell<span>Ward</span></div>
-    <h1>⚠️ 无法完成</h1><p class="sub">${esc(msg)}</p>
-    <p><a class="back" href="/">← 返回重试</a></p></div>`)
+function errorPage(msg: string, lang: 'zh' | 'en' = 'zh'): string {
+  const t = (z: string, e: string) => (lang === 'en' ? e : z)
+  return page(t('出错了', 'Error'), `<div class="hero"><div class="logo">🛡️ Shell<span>Ward</span></div>
+    <h1>⚠️ ${t('无法完成', 'Could not complete')}</h1><p class="sub">${esc(msg)}</p>
+    <p><a class="back" href="/?lang=${lang}">← ${t('返回重试', 'Back')}</a></p></div>`)
 }
 
 function page(title: string, body: string): string {
@@ -403,6 +420,9 @@ a{color:#cb0000;text-decoration:none}
 .logo em{font-style:normal;color:#94a3b8;font-weight:600;font-size:13px;margin-left:5px}
 .ghbtn{border:1px solid #cbd5e1;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;color:#0f172a;background:#fff;transition:.15s}
 .ghbtn:hover{border-color:#cb0000;color:#cb0000}
+.navr{display:flex;align-items:center;gap:6px}
+.lang{font-size:13px;font-weight:600;color:#94a3b8;padding:5px 8px;border-radius:7px}
+.lang.on{color:#cb0000;background:#fef2f2}.lang:hover{color:#cb0000}
 .wrap{max-width:760px;margin:0 auto;padding:0 24px 48px}
 .hd{text-align:center;padding:22px 0 26px}
 .tag{display:inline-block;background:#fef2f2;color:#cb0000;font-size:12px;font-weight:700;padding:5px 14px;border-radius:999px;margin-bottom:16px}

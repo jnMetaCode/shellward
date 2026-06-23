@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.20] - 2026-06-23
+
+### Added — web 端中英文双语
+- web 客户端与报告支持**中英文**：顶部 中文 / EN 切换；按 `?lang=zh|en` 或浏览器 Accept-Language 自动判定
+- 首页、错误页全部双语；报告渲染跟随语言；路径扫描/演示链接携带 `lang`，报告语言一致
+- `test-web.ts` 增 i18n 用例；全套 **318 测试**全绿
+
 ## [0.7.19] - 2026-06-23
 
 ### Changed — 消除浏览器"上传到此网站"弹框

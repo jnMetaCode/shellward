@@ -40,6 +40,13 @@ async function main() {
     const home = await (await fetch(base + '/')).text()
     test('首页含路径栏(无上传弹框)', home.includes('pathbar') && home.includes('id="dirs"'))
     test('首页含 URL 入口', home.includes('公开仓库地址'))
+    test('首页含 中/EN 语言切换', home.includes('/?lang=zh') && home.includes('/?lang=en'))
+
+    // i18n：英文页面 + 英文报告
+    const enHome = await (await fetch(base + '/?lang=en')).text()
+    test('?lang=en → 英文首页', enHome.includes('Scan a local project') && !enHome.includes('体检本地项目'))
+    const enReport = await (await fetch(base + '/scan?path=' + encodeURIComponent(tmpdir()) + '&lang=en')).text()
+    test('?lang=en → 英文报告', enReport.includes('Project Scan Findings') && enReport.includes('Compliance Report'))
 
     // 目录浏览器：列子目录（零上传）
     const browse = await (await fetch(base + '/browse?dir=' + encodeURIComponent(tmpdir()))).json() as any
