@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.21] - 2026-06-23
+
+### Added — policy-as-code 门禁（响应 issue #2，首个外部需求）
+- 项目根放 **`.shellward.json`** 声明 CI 门禁规则：`failOn`（类别/严重度命中即失败）、`maxFindings`（发现数上限）、`allowOverseas`（豁免指定境外厂商）
+- `shellward scan --ci` 据策略判定通过/失败并打印违规项；无策略文件时默认「有 critical 即失败」
+- 实现「策略在 Git push 时声明 → 运行时执行」的纵深防御（外部开发者 cschanhniem 的建议）
+- `src/compliance/policy.ts` + 10 项策略测试；全套 **328 测试**全绿
+
 ## [0.7.20] - 2026-06-23
 
 ### Added — web 端中英文双语

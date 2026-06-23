@@ -8,7 +8,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-318%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-328%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 **🌐 官网: https://jnmetacode.github.io/shellward/**
@@ -220,6 +220,24 @@ jobs:
 ```
 
 Or run it directly without the Action: `npx shellward scan --ci`.
+
+### Policy-as-code (`.shellward.json`)
+
+声明式 CI 门禁（[issue #2](https://github.com/jnMetaCode/shellward/issues/2)）— put a `.shellward.json` in your repo root:
+
+```json
+{
+  "failOn": ["secret", "pii"],
+  "maxFindings": 0,
+  "allowOverseas": ["OpenAI"]
+}
+```
+
+- `failOn` — fail CI if any finding matches these **kinds** (`secret`/`pii`/`overseas`/`env-perm`) or **severities** (`critical`/`high`/`medium`)
+- `maxFindings` — max total findings allowed
+- `allowOverseas` — overseas providers explicitly permitted (exempt from failure)
+
+`shellward scan --ci` reads it; without the file it defaults to "fail on any critical". 实现「策略在 Git push 时声明 → 运行时执行」的纵深防御。
 
 ## 8-Layer Defense
 

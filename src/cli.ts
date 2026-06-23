@@ -18,6 +18,7 @@ import { ShellWard } from './core/engine.js'
 import { runProjectComplianceAudit } from './compliance/audit.js'
 import { renderComplianceReport, renderProjectFindings } from './compliance/report.js'
 import { renderHtmlReport } from './compliance/html-report.js'
+import { checkPolicy } from './compliance/policy.js'
 import { runInit } from './init.js'
 import { resolveLocale } from './types.js'
 
@@ -162,10 +163,16 @@ function runScan(args: string[]) {
     }
   }
 
-  // CI 模式：有 critical 项目发现则非零退出
+  // CI 模式：按 .shellward.json 策略门禁（无策略文件则默认"有 critical 即失败"）
   if (ci) {
-    const criticals = scan.findings.filter(f => f.severity === 'critical').length
-    if (criticals > 0) process.exit(1)
+    const pol = checkPolicy(scan, root)
+    if (!json) {
+      process.stdout.write(zh
+        ? `\n🔒 策略门禁（${pol.source === 'file' ? '.shellward.json' : '默认'}）：${pol.pass ? '✅ 通过' : '❌ 未通过'}\n`
+        : `\n🔒 Policy gate (${pol.source === 'file' ? '.shellward.json' : 'default'}): ${pol.pass ? '✅ pass' : '❌ fail'}\n`)
+      for (const v of pol.violations) process.stdout.write(`   - ${v}\n`)
+    }
+    if (!pol.pass) process.exit(1)
   }
 }
 

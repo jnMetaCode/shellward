@@ -13,6 +13,7 @@ import { renderComplianceReport, renderProjectFindings } from './src/compliance/
 import { scanProject } from './src/compliance/project-scan'
 import { renderHtmlReport } from './src/compliance/html-report'
 import { validateRepoUrl } from './src/web/scan-server'
+import { evaluatePolicy, loadPolicy } from './src/compliance/policy'
 import { suggestDomestic, DOMESTIC_MODELS } from './src/rules/domestic-alternatives'
 import { COMPLIANCE_CONTROLS } from './src/compliance/regulations'
 import { DEFAULT_CONFIG } from './src/types'
@@ -395,6 +396,46 @@ console.log('\n--- Markdown 策略 + 诚实评分 ---')
     const html = renderHtmlReport(report, scan, 'zh', { root: clean })
     test('干净静态扫描 HTML 显示"未发现可观测风险"', html.includes('未发现可观测风险'))
   } finally { rmSync(clean, { recursive: true, force: true }) }
+}
+
+// === 14. policy-as-code 门禁（issue #2）===
+console.log('\n--- 策略门禁 .shellward.json ---')
+{
+  const mk = (kind: any, sev: any, provider?: string) => ({ kind, file: 'a.ts', detail: 'x', severity: sev, provider_en: provider } as any)
+  const scanOf = (findings: any[]) => ({ root: '/x', filesScanned: 1, truncated: false, findings, counts: { overseas: 0, secret: 0, pii: 0, 'env-perm': 0 } } as any)
+
+  // failOn 类别
+  const r1 = evaluatePolicy(scanOf([mk('secret', 'critical')]), { failOn: ['secret'] })
+  test('failOn secret 命中 → 不通过', !r1.pass)
+  const r2 = evaluatePolicy(scanOf([mk('overseas', 'high', 'OpenAI')]), { failOn: ['secret'] })
+  test('failOn secret 无密钥 → 通过', r2.pass)
+
+  // failOn 严重度
+  const r3 = evaluatePolicy(scanOf([mk('secret', 'critical')]), { failOn: ['critical'] })
+  test('failOn critical 命中 → 不通过', !r3.pass)
+
+  // allowOverseas 豁免
+  const r4 = evaluatePolicy(scanOf([mk('overseas', 'high', 'OpenAI')]), { failOn: ['overseas'], allowOverseas: ['OpenAI'] })
+  test('allowOverseas 豁免该厂商 → 通过', r4.pass)
+  const r5 = evaluatePolicy(scanOf([mk('overseas', 'high', 'Anthropic Claude')]), { failOn: ['overseas'], allowOverseas: ['OpenAI'] })
+  test('allowOverseas 不含的厂商 → 不通过', !r5.pass)
+
+  // maxFindings
+  const r6 = evaluatePolicy(scanOf([mk('pii', 'high'), mk('pii', 'high')]), { maxFindings: 1 })
+  test('maxFindings 超标 → 不通过', !r6.pass)
+  const r7 = evaluatePolicy(scanOf([]), { failOn: ['secret', 'critical'], maxFindings: 0 })
+  test('干净项目 → 通过', r7.pass)
+
+  // loadPolicy 默认 + 文件
+  const dir = mkdtempSync(join(tmpdir(), 'sw-pol-'))
+  try {
+    test('无文件 → 默认策略(failOn critical)', loadPolicy(dir).source === 'default')
+    writeFileSync(join(dir, '.shellward.json'), '{"failOn":["pii"],"maxFindings":5}')
+    const lp = loadPolicy(dir)
+    test('有文件 → 读取策略', lp.source === 'file' && lp.policy.maxFindings === 5)
+    writeFileSync(join(dir, '.shellward.json'), '{bad json')
+    test('坏文件 → 回退默认(不崩溃)', loadPolicy(dir).source === 'default')
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 }
 
 // === 总结 ===
