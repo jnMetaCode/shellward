@@ -594,11 +594,12 @@ guard.checkOutbound('send_email', {...})  // → { allowed: false } (读过敏�
 
 | 项目 | 说明 |
 |------|------|
-| [ai-coding-guide](https://github.com/jnMetaCode/ai-coding-guide) | AI 编程工具实战指南 — 66 个 Claude Code 技巧 + 9 款工具最佳实践 + 可复制配置模板 |
-| [agency-agents-zh](https://github.com/jnMetaCode/agency-agents-zh) | 187 个专业角色，让 AI 变成安全工程师、DBA、产品经理等 |
-| [agency-orchestrator](https://github.com/jnMetaCode/agency-orchestrator) | 多智能体编排引擎 — 用 YAML 编排 187 个角色协作，支持 DeepSeek/Claude/OpenAI/Ollama，零代码 |
+| [ai-coding-guide](https://github.com/jnMetaCode/ai-coding-guide) | AI 编程工具实战指南 — 66 个 Claude Code 技巧 + 10 款工具最佳实践 + 可复制配置模板 |
+| [agency-agents-zh](https://github.com/jnMetaCode/agency-agents-zh) | 277 个专业角色，让 AI 变成安全工程师、DBA、产品经理等 |
+| [agency-orchestrator](https://github.com/jnMetaCode/agency-orchestrator) | 多智能体编排引擎 — 用 YAML 编排 276 个角色协作，15 种大模型（11 种免 key），零代码 |
 | [superpowers-zh](https://github.com/jnMetaCode/superpowers-zh) | AI 编程超能力 · 中文版 — 20 个 skills，让你的 AI 编程助手真正会干活 |
 | 🆕 [ai-shortfilm-prompts](https://github.com/jnMetaCode/ai-shortfilm-prompts) | AI 短片提示词方法论 — Mx-Shell《丧尸清道夫》5 段式拆解 + Skill，Seedance / 小云雀 / Sora / 可灵 / 即梦通用 |
+| 🆕 [openshorts](https://github.com/jnMetaCode/openshorts) | 开片 —— 文案进，成片出：脚本 / 配音 / 字幕 / 成片 / 发布包一条龙，**0 元 0 key 跑通第一条**，本地优先 |
 
 ### 作者
 
