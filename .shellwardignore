@@ -20,6 +20,8 @@ test-*.ts
 test-fixtures/
 bench/
 demo/
+# skill 的演示项目（故意写成有合规缺口的样子，供 skill 示例与校验器测试取证用）
+skills/china-ai-compliance-audit/examples/
 
 # 数据文件
 vuln-db.json

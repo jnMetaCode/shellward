@@ -1,0 +1,184 @@
+{
+  "$comment": "控制项清单。id / regulation / article / title 与 src/compliance/regulations.ts 的 COMPLIANCE_CONTROLS 保持一致（test-skill.ts 校验零漂移）。look_for 是给 agent 的取证线索：去【被审计项目自己的代码】里找什么，而不是看 ShellWard 开关。scope=code 表示能从仓库取证；scope=org 表示主体责任类，仓库里通常找不到，默认走 needs_human。",
+  "version": 1,
+  "controls": [
+    {
+      "id": "csl-audit-log",
+      "regulation": "CSL",
+      "article": "第二十三条",
+      "title": "网络日志留存不少于 6 个月",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "LLM 调用 / 工具调用 / 用户请求有没有落日志（logger、审计表、埋点）",
+        "日志保留策略：logrotate、云日志 TTL、数据库清理任务里写的天数是否 ≥180",
+        "找不到任何保留期配置 → needs_human，问题写成「日志实际保留多少天、配置在哪」"
+      ]
+    },
+    {
+      "id": "csl-content-block",
+      "regulation": "CSL",
+      "article": "第四十九条",
+      "title": "发现禁止信息立即停止传输并留痕",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "模型输出返回给用户之前，有没有经过内容审核（自建词库、云厂商内容安全 API、审核模型）",
+        "命中之后是否阻断并记录（而不是只打一行 console）",
+        "流式输出（SSE / stream）是否绕过了审核"
+      ]
+    },
+    {
+      "id": "csl-intrusion",
+      "regulation": "CSL",
+      "article": "第二十一条 / 等保",
+      "title": "入侵防范与异常监测",
+      "severity": "medium",
+      "scope": "code",
+      "look_for": [
+        "用户输入是否未经处理直接拼进 system prompt 或工具参数（提示注入面）",
+        "agent 能调用的工具里有没有 shell / 文件写 / HTTP 外发，且没有白名单或确认",
+        "有没有限流、异常调用告警"
+      ]
+    },
+    {
+      "id": "pipl-spi-detect",
+      "regulation": "PIPL",
+      "article": "第二十八条",
+      "title": "敏感个人信息识别 (7类+未成年人)",
+      "severity": "critical",
+      "scope": "code",
+      "look_for": [
+        "项目处理哪些个人信息字段：身份证、手机号、银行卡、健康、人脸/声纹、位置、未成年人",
+        "这些字段进入 prompt、日志、向量库之前有没有识别与脱敏",
+        "基线扫描 kind=pii 的发现逐条分诊：真实数据 / 测试夹具 / 示例文档"
+      ]
+    },
+    {
+      "id": "pipl-minimize",
+      "regulation": "PIPL",
+      "article": "第六条 / 第十九条",
+      "title": "最小必要 + 数据流向管控",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "发给模型的上下文是不是整条用户记录 / 整张表，而任务只需要其中几个字段",
+        "对话与上传文件的保存期限，有没有删除路径",
+        "第三方 SDK（统计、客服、埋点）顺带带走了哪些个人信息"
+      ]
+    },
+    {
+      "id": "pipl-pia",
+      "regulation": "PIPL",
+      "article": "第五十五条 / 第五十六条",
+      "title": "个人信息保护影响评估 (PIA) 并留存 ≥3 年",
+      "severity": "high",
+      "scope": "org",
+      "look_for": [
+        "仓库里有没有 PIA / 隐私影响评估文档（docs/、compliance/、privacy/）",
+        "通常不在代码仓库 → needs_human，问题写成「是否做过 PIA、报告存放位置与日期」"
+      ]
+    },
+    {
+      "id": "pipl-auto-decision",
+      "regulation": "PIPL",
+      "article": "第二十四条",
+      "title": "自动化决策记录 + 人工复核回退",
+      "severity": "medium",
+      "scope": "code",
+      "look_for": [
+        "模型输出有没有直接驱动对个人有重大影响的动作：审批、授信、定价、招聘筛选、封号",
+        "如果有：是否记录输入特征 / 模型版本 / 输出，是否有人工复核与申诉入口",
+        "没有这类场景 → not_applicable，并用代码证据说明为什么"
+      ]
+    },
+    {
+      "id": "mlps-audit-fields",
+      "regulation": "MLPS",
+      "article": "GB/T 22239 8.1.4.3",
+      "title": "安全审计：覆盖每用户、记录五要素",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "审计记录里是否同时有：时间、用户标识、事件类型、成败结果、其他相关信息",
+        "匿名调用 / 共用一个 API key 导致无法追到具体用户",
+        "审计日志能不能被业务账号删改"
+      ]
+    },
+    {
+      "id": "mlps-access-control",
+      "regulation": "MLPS",
+      "article": "GB/T 22239 8.1.4.2",
+      "title": "访问控制：最小权限 + 工具/数据粒度",
+      "severity": "medium",
+      "scope": "code",
+      "look_for": [
+        "LLM / agent 用的数据库账号是不是全库读写",
+        "工具权限是否按用户角色区分，还是所有人共用一套工具",
+        "管理接口、调试接口有没有鉴权"
+      ]
+    },
+    {
+      "id": "mlps-not-root",
+      "regulation": "MLPS",
+      "article": "GB/T 22239 8.1.x",
+      "title": "不以特权账户 (root) 运行",
+      "severity": "medium",
+      "scope": "code",
+      "look_for": [
+        "Dockerfile 有没有 USER 指令；docker-compose / k8s 有没有 privileged、runAsUser: 0",
+        "systemd / pm2 / 部署脚本里用什么用户启动"
+      ]
+    },
+    {
+      "id": "cbdt-overseas-llm",
+      "regulation": "CBDT",
+      "article": "促进数据跨境流动规定",
+      "title": "境外大模型调用 = 数据出境识别",
+      "severity": "critical",
+      "scope": "code",
+      "look_for": [
+        "基线扫描 kind=overseas 的每一条：顺着调用点往上追，发过去的内容里有没有个人信息或业务敏感数据",
+        "这是本 skill 的核心增量——扫描器只能说「有境外端点」，你要回答「个人信息有没有真的流过去」",
+        "只发送非个人数据（例如纯代码、公开文本）→ 记 met 或低风险，并引用证明这一点的代码行"
+      ]
+    },
+    {
+      "id": "cbdt-redact-before-export",
+      "regulation": "CBDT",
+      "article": "安全评估 / 标准合同",
+      "title": "出境前脱敏 / 防裸数据出境",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "境外调用点之前有没有脱敏 / 去标识化函数，是否覆盖所有调用路径（含重试、降级、批处理）",
+        "境内外模型切换逻辑：降级到境外模型时是否仍走脱敏"
+      ]
+    },
+    {
+      "id": "genai-label",
+      "regulation": "GENAI",
+      "article": "标识办法 / GB 45438-2025",
+      "title": "AI生成内容标识 (显式 + 元数据)",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "面向用户展示的生成内容旁边有没有「AI 生成」类显式提示（前端组件、模板、接口返回字段）",
+        "导出的图片 / 音视频 / 文档有没有写入元数据隐式标识",
+        "纯内部工具、不对公众提供服务 → 可能 not_applicable，写 needs_human 让人确认服务对象"
+      ]
+    },
+    {
+      "id": "genai-content-safety",
+      "regulation": "GENAI",
+      "article": "暂行办法第四条 / 安全基本要求",
+      "title": "内容安全过滤 (违禁类别 + 拒答率)",
+      "severity": "high",
+      "scope": "code",
+      "look_for": [
+        "输入侧与输出侧有没有内容安全过滤；用的是什么（自建 / 云 API）",
+        "有没有拒答测试集与评测记录——通常没有 → needs_human，问题写成「是否做过拒答率评测、结果在哪」"
+      ]
+    }
+  ]
+}

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added — `china-ai-compliance-audit` Skill：把「需人工确认」的那 11 项交给 agent 取证
+- 新增 `skills/china-ai-compliance-audit/`：让编码 agent 以 `shellward scan` 为确定性基线，顺着数据流对 14 个控制项逐项取证，产出 `.compliance/COMPLIANCE-REPORT.md`
+- 核心增量：扫描器只能报「有境外端点」，skill 回答「个人信息有没有真的流过去」
+- 零依赖校验器 `scripts/validate-findings.mjs`：核对每条 `文件:行` 引用真实存在、quote 真在原文里；拦截报告中的完整密钥/手机号/证件号；强制复核与 14 项全覆盖；报告由已校验记录确定性渲染（不经 LLM 转写）
+- 五种裁决 `gap / met / needs_human / not_applicable / rejected`；`needs_human` 不许带严重度，只许提具体问题
+- `controls.json` 与 `src/compliance/regulations.ts` 零漂移测试；`test-skill.ts` 39 项（多数为验红）；全套 **367 测试**全绿
+- 发布前用一个带陷阱的试验项目让全新 agent 只凭 SKILL.md 试跑：查出藏在降级路径里的境外直发、未误报指向境内端点的 openai SDK；其 14 条反馈（示例与复核协议矛盾、复核员看不到控制项范围、复核员能读到审计员推理等）已全部修入
+
 ## [0.7.21] - 2026-06-23
 
 ### Added — policy-as-code 门禁（响应 issue #2，首个外部需求）

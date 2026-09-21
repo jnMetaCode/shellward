@@ -1,0 +1,266 @@
+{
+  "schema": 1,
+  "project": "demo-support-bot",
+  "audited_at": "2026-09-21",
+  "baseline": {
+    "tool": "shellward",
+    "score": 75,
+    "grade": "B"
+  },
+  "findings": [
+    {
+      "id": "F-001",
+      "control": "cbdt-overseas-llm",
+      "verdict": "gap",
+      "severity": "critical",
+      "source": "baseline",
+      "title": "客户手机号与身份证号被拼进 system prompt 发往 OpenAI 境外端点",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 6,
+          "quote": "new OpenAI({ baseURL: 'https://api.openai.com/v1'"
+        },
+        {
+          "file": "src/chat.ts",
+          "line": 10,
+          "quote": "手机 ${user.phone}，身份证 ${user.idCard}"
+        },
+        {
+          "file": "src/chat.ts",
+          "line": 14,
+          "quote": "{ role: 'system', content: context }"
+        }
+      ],
+      "remediation": "改用境内已备案模型（多数只需换 baseURL），或在第 10 行之前对 phone / idCard 脱敏后再拼上下文。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld",
+        "note": "chat.ts 内无其他调用路径，db.ts:8 确认查询返回 phone 与 idCard 原值"
+      }
+    },
+    {
+      "id": "F-002",
+      "control": "cbdt-redact-before-export",
+      "verdict": "gap",
+      "severity": "high",
+      "source": "agent",
+      "title": "境外调用前没有任何脱敏步骤",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 9,
+          "quote": "const user = await findUser(userId)"
+        }
+      ],
+      "remediation": "在 findUser 与拼接 context 之间加脱敏函数，并让所有调用路径（含重试）都经过它。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld",
+        "note": "全仓搜索 mask / redact / 脱敏 无命中"
+      }
+    },
+    {
+      "id": "F-003",
+      "control": "pipl-minimize",
+      "verdict": "gap",
+      "severity": "high",
+      "source": "agent",
+      "title": "回答客服问题不需要身份证号，却查询并发送了它",
+      "evidence": [
+        {
+          "file": "src/db.ts",
+          "line": 7,
+          "quote": "SELECT name, phone, idCard FROM customers"
+        }
+      ],
+      "remediation": "查询只取任务需要的字段；身份证号不应进入模型上下文。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld"
+      }
+    },
+    {
+      "id": "F-004",
+      "control": "pipl-spi-detect",
+      "verdict": "gap",
+      "severity": "critical",
+      "source": "agent",
+      "title": "身份证号（敏感个人信息）进入 prompt 前无识别与处理",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 10,
+          "quote": "身份证 ${user.idCard}"
+        }
+      ],
+      "remediation": "对进入 prompt、日志、向量库的文本统一过一层敏感信息识别。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld"
+      }
+    },
+    {
+      "id": "F-005",
+      "control": "mlps-audit-fields",
+      "verdict": "gap",
+      "severity": "high",
+      "source": "agent",
+      "title": "日志缺用户标识与成败结果，凑不齐审计五要素",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 18,
+          "quote": "log('reply', question)"
+        },
+        {
+          "file": "src/logger.ts",
+          "line": 2,
+          "quote": "console.log(new Date().toISOString(), event, detail)"
+        }
+      ],
+      "remediation": "审计记录补上 userId、结果（成功/失败/拦截）与模型版本，写入独立且业务账号不可改的存储。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld"
+      }
+    },
+    {
+      "id": "F-006",
+      "control": "csl-audit-log",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "日志只打到 stdout，保留期取决于部署侧",
+      "question": "生产环境 stdout 日志被采集到哪里、实际保留多少天？配置在哪个文件或控制台？",
+      "evidence": [
+        {
+          "file": "src/logger.ts",
+          "line": 2,
+          "quote": "console.log(new Date().toISOString()"
+        }
+      ]
+    },
+    {
+      "id": "F-007",
+      "control": "mlps-not-root",
+      "verdict": "gap",
+      "severity": "medium",
+      "source": "agent",
+      "title": "Dockerfile 没有 USER 指令，容器以 root 运行",
+      "evidence": [
+        {
+          "file": "Dockerfile",
+          "line": 5,
+          "quote": "CMD [\"node\", \"dist/server.js\"]"
+        }
+      ],
+      "remediation": "在 CMD 之前加 USER node。",
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld",
+        "note": "Dockerfile 共 5 行，无 USER"
+      }
+    },
+    {
+      "id": "F-008",
+      "control": "mlps-access-control",
+      "verdict": "met",
+      "source": "agent",
+      "title": "机器人使用只读数据库账号",
+      "evidence": [
+        {
+          "file": "src/db.ts",
+          "line": 4,
+          "quote": "user: 'bot_readonly'"
+        }
+      ],
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld",
+        "note": "账号名表明只读；实际授权需 DBA 确认，已另列问题"
+      }
+    },
+    {
+      "id": "F-009",
+      "control": "mlps-access-control",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "只读账号的实际授权范围",
+      "question": "bot_readonly 在数据库里的实际授权是否仅限 customers 表的 SELECT？"
+    },
+    {
+      "id": "F-010",
+      "control": "csl-content-block",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "仓库内模型输出未经审核直接返回，审核可能在网关侧",
+      "question": "模型回复返回用户之前，网关或云厂商侧是否有内容安全审核？命中后是否阻断并留痕？",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 19,
+          "quote": "return r.choices[0].message.content"
+        }
+      ]
+    },
+    {
+      "id": "F-011",
+      "control": "genai-content-safety",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "拒答率评测",
+      "question": "上线前是否做过违禁内容拒答测试？测试集与结果存放在哪里？"
+    },
+    {
+      "id": "F-012",
+      "control": "genai-label",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "AI 生成内容标识在前端是否展示",
+      "question": "本仓库只有后端。展示回复的前端界面是否有「AI 生成」类显式提示？前端仓库在哪？"
+    },
+    {
+      "id": "F-013",
+      "control": "csl-intrusion",
+      "verdict": "met",
+      "source": "agent",
+      "title": "用户输入只进入 user 角色，未拼入 system prompt，且 agent 无工具可调用",
+      "evidence": [
+        {
+          "file": "src/chat.ts",
+          "line": 15,
+          "quote": "{ role: 'user', content: question }"
+        }
+      ],
+      "verifier": {
+        "mode": "independent",
+        "result": "upheld",
+        "note": "create() 调用未传 tools 参数"
+      }
+    },
+    {
+      "id": "F-014",
+      "control": "pipl-auto-decision",
+      "verdict": "not_applicable",
+      "source": "agent",
+      "title": "无自动化决策场景",
+      "reason": "模型输出只作为客服回复文本返回（chat.ts:19），不驱动审批、定价、封号等对个人有重大影响的动作。"
+    },
+    {
+      "id": "F-015",
+      "control": "pipl-pia",
+      "verdict": "needs_human",
+      "source": "agent",
+      "title": "个人信息保护影响评估",
+      "question": "本项目向境外提供个人信息，是否做过 PIA？报告日期与存放位置？"
+    },
+    {
+      "id": "F-016",
+      "control": "cbdt-overseas-llm",
+      "verdict": "rejected",
+      "source": "baseline",
+      "title": "package.json 的 openai 依赖",
+      "reason": "重复候选：与 F-001 是同一个出境通道，依赖声明本身不构成独立发现，已并入 F-001。"
+    }
+  ]
+}

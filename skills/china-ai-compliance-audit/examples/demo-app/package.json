@@ -1,0 +1,5 @@
+{
+  "name": "demo-support-bot",
+  "private": true,
+  "dependencies": { "openai": "^4.0.0", "mysql2": "^3.0.0" }
+}

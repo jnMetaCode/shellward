@@ -8,7 +8,7 @@
 
 [![npm](https://img.shields.io/npm/v/shellward?color=cb0000&label=npm)](https://www.npmjs.com/package/shellward)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
-[![tests](https://img.shields.io/badge/tests-328%20passing-brightgreen)](#performance)
+[![tests](https://img.shields.io/badge/tests-367%20passing-brightgreen)](#performance)
 [![deps](https://img.shields.io/badge/dependencies-0-brightgreen)](#performance)
 
 **🌐 官网: https://jnmetacode.github.io/shellward/**
@@ -36,6 +36,32 @@ npx shellward scan
 
 合规得分: 63/100  [C]
 ```
+
+## 🆕 让你的 agent 做一次完整合规审计（Skill）
+
+`scan` 是确定性扫描：它能告诉你「项目里有境外模型端点」，但判断不了**个人信息有没有真的流过去**；14 个法规控制项里也有 11 个它只能标「需人工确认」。这一段交给你的编码 agent 来做——Claude Code、Cursor、Codex 等支持 Agent Skills 的工具都能用。
+
+把这句话粘贴给你的 agent：
+
+```text
+安装 https://github.com/jnMetaCode/shellward 里的 china-ai-compliance-audit skill，然后用它审计当前项目。
+```
+
+或者用命令装：`npx skills add jnMetaCode/shellward --skill china-ai-compliance-audit`
+
+它会先跑 `shellward scan` 拿确定性基线，再顺着数据流逐项取证，最后产出 `.compliance/COMPLIANCE-REPORT.md`。和「让 AI 随便看看合不合规」的区别在三道闸：
+
+| | |
+|---|---|
+| **取证闸** | 每条发现必须带 `文件:行` + 原文引用；校验脚本逐条打开文件核对，**引用对不上就不算数**（防幻觉） |
+| **复核闸** | 每条「缺口」和「已满足」都要被一个没看过推理过程的独立 agent 尝试推翻一次；推翻的留档不删 |
+| **诚实闸** | 仓库里找不到的事实（备案、PIA、日志实际保留天数）不许替你下结论，只许提出**一个人能直接回答的具体问题** |
+
+另外：14 个控制项必须全部有结论，不许悄悄跳过；报告里不许出现完整密钥、手机号、身份证号——合规报告自己不能泄漏数据。
+
+**示例**（[演示项目](skills/china-ai-compliance-audit/examples/demo-app) · [完整记录](skills/china-ai-compliance-audit/examples/compliance-findings.example.json)）：一个客服机器人，`shellward scan` 给 **75 分 [B]**、只报出「有 OpenAI 端点」；审计顺着调用链查到客户手机号和身份证号被拼进 system prompt 发往境外——**2 条严重、3 条高**，外加 6 个只有人能回答的问题（比如「审核是不是在网关侧做了」——仓库里看不到的事，它不替你下结论）。
+
+> 这是技术自查材料，不是法律意见。备案、定级、PIA 等主体责任不能由工具代替。
 
 想在浏览器里看？`npx shellward scan --open`（扫完直接打开报告）或 `--serve`（本地 http://localhost 提供报告）——**数据全程不出本机**。
 
