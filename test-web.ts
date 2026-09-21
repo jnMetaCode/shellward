@@ -37,7 +37,8 @@ async function main() {
   const up = await waitUp(base + '/')
   test('服务启动并响应', up)
   if (up) {
-    const home = await (await fetch(base + '/')).text()
+    // 显式要中文：服务端默认语言跟随机器 locale，CI 是英文环境，不带 ?lang 这两条断言会在 CI 上假红
+    const home = await (await fetch(base + '/?lang=zh')).text()
     test('首页含路径栏(无上传弹框)', home.includes('pathbar') && home.includes('id="dirs"'))
     test('首页含 URL 入口', home.includes('公开仓库地址'))
     test('首页含 中/EN 语言切换', home.includes('/?lang=zh') && home.includes('/?lang=en'))
@@ -104,7 +105,7 @@ async function main() {
   const pup = await waitUp(pbase + '/')
   test('公网服务启动', pup)
   if (pup) {
-    const phome = await (await fetch(pbase + '/')).text()
+    const phome = await (await fetch(pbase + '/?lang=zh')).text()
     test('公网首页不含本地路径栏（只 URL）', !phome.includes('pathbar') && phome.includes('公开仓库地址'))
     // 公网模式禁止目录浏览（防止扫服务器硬盘）
     const browseBlocked = await fetch(pbase + '/browse?dir=/etc')
