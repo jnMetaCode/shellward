@@ -85,6 +85,30 @@ npx shellward scan
 
 Quick start: `npx shellward scan` — zero install, read-only, nothing uploaded. Outputs a red/yellow/green scorecard mapped to Chinese regulations plus concrete `file:line` findings, and prescribes domestic compliant model alternatives for any overseas LLM it finds.
 
+### Agent skill: a full compliance audit, with receipts
+
+`scan` is deterministic: it can tell you "this project calls an overseas LLM endpoint", but not **whether personal data actually flows to it** — and 11 of the 14 regulatory controls can only be marked "needs manual review". The `china-ai-compliance-audit` skill hands that part to your coding agent (Claude Code, Cursor, Codex, or anything that supports Agent Skills).
+
+Paste this into your agent:
+
+```text
+Install the china-ai-compliance-audit skill from https://github.com/jnMetaCode/shellward and audit this project with it.
+```
+
+or `npx skills add jnMetaCode/shellward --skill china-ai-compliance-audit`.
+
+It runs `shellward scan` as a deterministic baseline, traces the data flow control by control, and writes `.compliance/COMPLIANCE-REPORT.md`. What makes it different from "ask the AI if this looks compliant" is three gates:
+
+- **Evidence gate** — every finding needs `file:line` plus a verbatim quote. A zero-dependency validator opens each file and checks the quote is really there. Hallucinated citations fail the run.
+- **Verification gate** — every "gap" and every "measure found" is handed to a fresh agent that never saw the auditor's reasoning, whose only job is to disprove it. Overturned findings are kept on record, not deleted.
+- **Honesty gate** — facts that aren't in the repo (filings, impact assessments, actual log retention) can't be guessed. The agent must ask **one specific question a human can answer**, with no severity attached.
+
+All 14 controls must reach a verdict — no silent skips — and the report itself may not contain full secrets, phone numbers or ID numbers.
+
+Example ([demo project](skills/china-ai-compliance-audit/examples/demo-app), [full record](skills/china-ai-compliance-audit/examples/compliance-findings.example.json)): a support bot that `shellward scan` grades **75/100 [B]** with a single "OpenAI endpoint" note. The audit follows the call chain and finds customer phone and national-ID numbers interpolated into the system prompt sent overseas — **2 critical, 3 high**, plus 6 questions only a human can answer.
+
+> A technical self-check, not legal advice.
+
 ## Demo
 
 ![ShellWard AI agent firewall demo — blocking prompt injection, data exfiltration, and reverse shell attacks in real time](https://github.com/jnMetaCode/shellward/releases/download/v0.5.0/demo-en.gif)
