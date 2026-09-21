@@ -33,7 +33,9 @@ async function main() {
   console.log('--- 本地模式 (web --local) ---')
   const localPort = 8211
   const localSrv = await startServer(['--local', '--port', String(localPort)])
-  const base = `http://localhost:${localPort}`
+  // 用 127.0.0.1 不用 localhost：Node 18 没有 happy-eyeballs，Linux 上 localhost 先解析成 ::1，
+  // 而服务只监听 IPv4（127.0.0.1 / 0.0.0.0），fetch 直接连不上 —— CI 的 Node 18 因此一直红。
+  const base = `http://127.0.0.1:${localPort}`
   const up = await waitUp(base + '/')
   test('服务启动并响应', up)
   if (up) {
@@ -101,7 +103,7 @@ async function main() {
   console.log('\n--- 公网模式 (web) ---')
   const pubPort = 8212
   const pubSrv = await startServer([String(pubPort)])
-  const pbase = `http://localhost:${pubPort}`
+  const pbase = `http://127.0.0.1:${pubPort}`
   const pup = await waitUp(pbase + '/')
   test('公网服务启动', pup)
   if (pup) {
