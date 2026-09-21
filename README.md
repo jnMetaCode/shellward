@@ -63,6 +63,8 @@ npx shellward scan
 
 > 这是技术自查材料，不是法律意见。备案、定级、PIA 等主体责任不能由工具代替。
 
+**团队要对多个 AI 项目做合规自查、或想把它接进内部流程？** 邮件 [jnMetaCode@qq.com](mailto:jnMetaCode@qq.com?subject=ShellWard%20合规自查)，说一下团队规模和场景。
+
 想在浏览器里看？`npx shellward scan --open`（扫完直接打开报告）或 `--serve`（本地 http://localhost 提供报告）——**数据全程不出本机**。
 
 **Web 扫描器 / 客户端（双模式）**：
