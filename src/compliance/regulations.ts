@@ -87,7 +87,7 @@ export const COMPLIANCE_CONTROLS: ComplianceControl[] = [
   {
     id: 'csl-intrusion',
     regulation: 'CSL',
-    article: '第二十一条 / 等保',
+    article: '第二十三条第（二）项 / 等保',
     title_zh: '入侵防范与异常监测',
     title_en: 'Intrusion prevention & anomaly monitoring',
     requirement_zh: '采取防范计算机病毒和网络攻击、网络侵入等危害网络安全行为的技术措施。',

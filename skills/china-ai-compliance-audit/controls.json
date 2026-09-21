@@ -31,7 +31,7 @@
     {
       "id": "csl-intrusion",
       "regulation": "CSL",
-      "article": "第二十一条 / 等保",
+      "article": "第二十三条第（二）项 / 等保",
       "title": "入侵防范与异常监测",
       "severity": "medium",
       "scope": "code",
