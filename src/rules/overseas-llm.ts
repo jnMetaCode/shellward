@@ -33,6 +33,13 @@ export const OVERSEAS_LLM_ENDPOINTS: OverseasEndpoint[] = [
   { id: 'openrouter', hosts: ['openrouter.ai'], provider_zh: 'OpenRouter (聚合网关)', provider_en: 'OpenRouter (gateway)' },
   { id: 'huggingface', hosts: ['api-inference.huggingface.co', 'huggingface.co'], provider_zh: 'HuggingFace', provider_en: 'HuggingFace' },
   { id: 'xai', hosts: ['api.x.ai'], provider_zh: 'xAI Grok', provider_en: 'xAI Grok' },
+  { id: 'replicate', hosts: ['api.replicate.com'], provider_zh: 'Replicate', provider_en: 'Replicate' },
+  { id: 'ai21', hosts: ['api.ai21.com'], provider_zh: 'AI21 Labs', provider_en: 'AI21 Labs' },
+  { id: 'fireworks', hosts: ['api.fireworks.ai'], provider_zh: 'Fireworks AI', provider_en: 'Fireworks AI' },
+  { id: 'deepinfra', hosts: ['api.deepinfra.com'], provider_zh: 'DeepInfra', provider_en: 'DeepInfra' },
+  { id: 'cerebras', hosts: ['api.cerebras.ai'], provider_zh: 'Cerebras', provider_en: 'Cerebras' },
+  { id: 'voyage', hosts: ['api.voyageai.com'], provider_zh: 'Voyage AI', provider_en: 'Voyage AI' },
+  { id: 'nvidia-nim', hosts: ['integrate.api.nvidia.com'], provider_zh: 'NVIDIA NIM', provider_en: 'NVIDIA NIM' },
 ]
 
 export interface OverseasMatch {
@@ -93,6 +100,22 @@ export const OVERSEAS_LLM_PACKAGES: Record<string, { zh: string; en: string }> =
   '@langchain/openai': { zh: 'OpenAI (LangChain)', en: 'OpenAI (LangChain)' },
   '@langchain/anthropic': { zh: 'Anthropic (LangChain)', en: 'Anthropic (LangChain)' },
   '@langchain/google-genai': { zh: 'Gemini (LangChain)', en: 'Gemini (LangChain)' },
+  '@langchain/mistralai': { zh: 'Mistral AI (LangChain)', en: 'Mistral AI (LangChain)' },
+  '@langchain/cohere': { zh: 'Cohere (LangChain)', en: 'Cohere (LangChain)' },
+  '@langchain/groq': { zh: 'Groq (LangChain)', en: 'Groq (LangChain)' },
+  '@google/genai': { zh: 'Google Gemini', en: 'Google Gemini' },
+  '@anthropic-ai/bedrock-sdk': { zh: 'Anthropic (Bedrock)', en: 'Anthropic (Bedrock)' },
+  '@anthropic-ai/vertex-sdk': { zh: 'Anthropic (Vertex)', en: 'Anthropic (Vertex)' },
+  '@aws-sdk/client-bedrock-runtime': { zh: 'AWS Bedrock', en: 'AWS Bedrock' },
+  '@ai-sdk/openai': { zh: 'OpenAI (Vercel AI SDK)', en: 'OpenAI (Vercel AI SDK)' },
+  '@ai-sdk/anthropic': { zh: 'Anthropic (Vercel AI SDK)', en: 'Anthropic (Vercel AI SDK)' },
+  '@ai-sdk/google': { zh: 'Gemini (Vercel AI SDK)', en: 'Gemini (Vercel AI SDK)' },
+  '@ai-sdk/mistral': { zh: 'Mistral AI (Vercel AI SDK)', en: 'Mistral AI (Vercel AI SDK)' },
+  '@ai-sdk/xai': { zh: 'xAI Grok (Vercel AI SDK)', en: 'xAI Grok (Vercel AI SDK)' },
+  '@openrouter/ai-sdk-provider': { zh: 'OpenRouter (聚合网关)', en: 'OpenRouter (gateway)' },
+  'ai21': { zh: 'AI21 Labs', en: 'AI21 Labs' },
+  'voyageai': { zh: 'Voyage AI', en: 'Voyage AI' },
+  '@cerebras/cerebras_cloud_sdk': { zh: 'Cerebras', en: 'Cerebras' },
   // python
   'anthropic': { zh: 'Anthropic Claude', en: 'Anthropic Claude' },
   'google-generativeai': { zh: 'Google Gemini', en: 'Google Gemini' },
@@ -105,9 +128,21 @@ export const OVERSEAS_LLM_PACKAGES: Record<string, { zh: string; en: string }> =
   'langchain-openai': { zh: 'OpenAI (LangChain)', en: 'OpenAI (LangChain)' },
   'langchain-anthropic': { zh: 'Anthropic (LangChain)', en: 'Anthropic (LangChain)' },
   'langchain-google-genai': { zh: 'Gemini (LangChain)', en: 'Gemini (LangChain)' },
-  // go
+  'langchain-mistralai': { zh: 'Mistral AI (LangChain)', en: 'Mistral AI (LangChain)' },
+  'langchain-cohere': { zh: 'Cohere (LangChain)', en: 'Cohere (LangChain)' },
+  'langchain-groq': { zh: 'Groq (LangChain)', en: 'Groq (LangChain)' },
+  'llama-index-llms-openai': { zh: 'OpenAI (LlamaIndex)', en: 'OpenAI (LlamaIndex)' },
+  'llama-index-llms-anthropic': { zh: 'Anthropic (LlamaIndex)', en: 'Anthropic (LlamaIndex)' },
+  'google-genai': { zh: 'Google Gemini', en: 'Google Gemini' },
+  'fireworks-ai': { zh: 'Fireworks AI', en: 'Fireworks AI' },
+  'cerebras-cloud-sdk': { zh: 'Cerebras', en: 'Cerebras' },
+  'xai-sdk': { zh: 'xAI Grok', en: 'xAI Grok' },
+  // go（go.mod 里的 /vN 主版本后缀会先剥掉再匹配）
   'github.com/sashabaranov/go-openai': { zh: 'OpenAI (Go)', en: 'OpenAI (Go)' },
+  'github.com/openai/openai-go': { zh: 'OpenAI (Go)', en: 'OpenAI (Go)' },
   'github.com/anthropics/anthropic-sdk-go': { zh: 'Anthropic (Go)', en: 'Anthropic (Go)' },
+  'google.golang.org/genai': { zh: 'Google Gemini (Go)', en: 'Google Gemini (Go)' },
+  'github.com/google/generative-ai-go': { zh: 'Google Gemini (Go)', en: 'Google Gemini (Go)' },
 }
 
 export interface DepMatch {
@@ -147,7 +182,12 @@ export function detectOverseasDeps(filename: string, content: string): DepMatch[
       if (!line || line.startsWith('#') || line.startsWith('//')) continue
       // 提取依赖名：requirements `pkg==x` / pyproject `"pkg>=x"` / go.mod `module vX`
       const tokens = line.match(/[a-z0-9_.\-\/@]+/g) || []
-      for (const t of tokens) names.add(t)
+      for (const t of tokens) {
+        names.add(t)
+        // go 模块主版本后缀：github.com/openai/openai-go/v3 → github.com/openai/openai-go
+        const noMajor = t.replace(/\/v\d+$/, '')
+        if (noMajor !== t) names.add(noMajor)
+      }
     }
   }
 

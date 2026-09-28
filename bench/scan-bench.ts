@@ -53,6 +53,17 @@ const C: Case[] = [
   { id: 'n11', path: 'sha.ts', content: 'const commit="a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"', expect: 'none', note: 'git commit sha(40hex,非密钥)' },
   { id: 'n12', path: 'req2/requirements.txt', content: 'dashscope==1.0\nzhipuai>=2.0', expect: 'none', note: '境内 SDK 依赖(不算出境)' },
   { id: 'n13', path: 'uuid.ts', content: 'const id="550e8400-e29b-41d4-a716-446655440000"', expect: 'none', note: 'UUID(非密钥/PII)' },
+  // ===== 追加（issue #4）：更多境外厂商端点 / SDK =====
+  { id: 'p19', path: 'f.py', content: 'URL="https://api.fireworks.ai/inference/v1"', expect: 'overseas', note: 'Fireworks 端点' },
+  { id: 'p20', path: 'g.ts', content: 'const u="https://api.deepinfra.com/v1/openai"', expect: 'overseas', note: 'DeepInfra 端点' },
+  { id: 'p21', path: 'h.ts', content: 'fetch("https://api.replicate.com/v1/predictions")', expect: 'overseas', note: 'Replicate 端点' },
+  { id: 'p22', path: 'i.py', content: 'BASE="https://api.ai21.com/studio/v1"', expect: 'overseas', note: 'AI21 端点' },
+  { id: 'p23', path: 'package.json', content: '{"dependencies":{"@ai-sdk/openai":"^1","ai":"^4"}}', expect: 'overseas', note: 'Vercel AI SDK @ai-sdk/openai 依赖' },
+  { id: 'p24', path: 'requirements.txt', content: 'google-genai>=1.0\nfireworks-ai', expect: 'overseas', note: 'google-genai / fireworks-ai 依赖(py)' },
+  { id: 'p25', path: 'go.mod', content: 'module x\nrequire github.com/openai/openai-go/v3 v3.1.0', expect: 'overseas', note: '官方 openai-go(带 /v3 主版本后缀)' },
+  { id: 'n14', path: 'dom3.ts', content: 'const u="https://api.hunyuan.cloud.tencent.com/v1"', expect: 'none', note: '境内混元端点' },
+  { id: 'n15', path: 'dom4.py', content: 'BASE="https://api.minimaxi.com/v1"', expect: 'none', note: '境内 MiniMax 端点' },
+  { id: 'n16', path: 'dom5.ts', content: 'const u="https://spark-api-open.xf-yun.com/v1"', expect: 'none', note: '境内讯飞星火端点' },
 ]
 
 function run(ci: boolean) {

@@ -46,6 +46,30 @@ export const DOMESTIC_MODELS: DomesticModel[] = [
     id: 'ernie', name_zh: '文心一言', name_en: 'ERNIE', vendor_zh: '百度千帆',
     baseUrl: 'https://qianfan.baidubce.com/v2', openaiCompatible: true,
   },
+  {
+    id: 'hunyuan', name_zh: '腾讯混元', name_en: 'Tencent Hunyuan', vendor_zh: '腾讯云',
+    baseUrl: 'https://api.hunyuan.cloud.tencent.com/v1', openaiCompatible: true,
+  },
+  {
+    id: 'minimax', name_zh: 'MiniMax', name_en: 'MiniMax', vendor_zh: '稀宇科技',
+    baseUrl: 'https://api.minimaxi.com/v1', openaiCompatible: true,
+  },
+  {
+    id: 'spark', name_zh: '讯飞星火', name_en: 'iFlytek Spark', vendor_zh: '科大讯飞',
+    baseUrl: 'https://spark-api-open.xf-yun.com/v1', openaiCompatible: true,
+  },
+  {
+    id: 'stepfun', name_zh: '阶跃星辰 Step', name_en: 'StepFun Step', vendor_zh: '阶跃星辰',
+    baseUrl: 'https://api.stepfun.com/v1', openaiCompatible: true,
+  },
+  {
+    id: 'baichuan', name_zh: '百川', name_en: 'Baichuan', vendor_zh: '百川智能',
+    baseUrl: 'https://api.baichuan-ai.com/v1', openaiCompatible: true,
+  },
+  {
+    id: 'yi', name_zh: '零一万物 Yi', name_en: '01.AI Yi', vendor_zh: '零一万物',
+    baseUrl: 'https://api.lingyiwanwu.com/v1', openaiCompatible: true,
+  },
 ]
 
 export interface DomesticSuggestion {
@@ -60,7 +84,7 @@ export interface DomesticSuggestion {
 }
 
 // 哪些境外厂商走 OpenAI 兼容协议（其 SDK 项目可零代码迁移到境内兼容端点）
-const OPENAI_PROTOCOL = new Set(['openai', 'azure-openai', 'groq', 'together', 'mistral', 'perplexity', 'openrouter', 'xai'])
+const OPENAI_PROTOCOL = new Set(['openai', 'azure-openai', 'groq', 'together', 'mistral', 'perplexity', 'openrouter', 'xai', 'fireworks', 'deepinfra', 'cerebras', 'nvidia-nim'])
 
 /**
  * 针对某个境外厂商给出境内替代建议。
