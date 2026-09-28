@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — 按路径的策略规则（issue #5，承接 #2）
+- `.shellward.json` 新增 `rules[]`：`{ "path": "agents/**", "failOn": ["overseas"] }` 只约束命中路径的发现，与全局规则同时检查；`path` 支持单个或数组，`**` / `*` / `?` 通配，不含 `/` 的模式按 `.gitignore` 语义匹配任意层级
+- 规则内 `allowOverseas` 不填继承全局、填了覆盖（`[]` 可在敏感目录取消豁免）
+- 新增 `version` 字段（当前 1），便于以后向前兼容
+- 违规说明带规则路径与前 3 个 `文件:行`，CI 日志直接定位
+- **修复**：`failOn` 拼错（如 `"secrets"`）、未知字段、JSON 损坏此前被静默忽略，门禁会"永远通过"；现在全部以 ⚠️ 警告打印
+
+### Added — 更多境内替代与境外识别（issue #3 / #4）
+- 境内替代表新增 腾讯混元 / MiniMax / 讯飞星火 / 阶跃星辰 / 百川 / 零一万物（均为 OpenAI 兼容端点）；README 加完整替代表，测试保证与代码不漂移
+- 境外端点新增 Replicate / AI21 / Fireworks / DeepInfra / Cerebras / Voyage / NVIDIA NIM
+- 境外 SDK 新增 `@google/genai` / `google-genai`、Vercel AI SDK（`@ai-sdk/*`）、Anthropic Bedrock/Vertex SDK、`@aws-sdk/client-bedrock-runtime`、LangChain Mistral/Cohere/Groq、LlamaIndex、官方 `openai-go`、Go `genai` 等
+- `go.mod` 依赖先剥 `/vN` 主版本后缀再匹配（此前 `openai-go/v3` 会漏报）
+- 扫描基准 31 → 41 例（24 正例 + 17 硬负例，新增 3 个境内端点负例），P/R 仍为 100%
+
 ### Added — `china-ai-compliance-audit` Skill：把「需人工确认」的那 11 项交给 agent 取证
 - 新增 `skills/china-ai-compliance-audit/`：让编码 agent 以 `shellward scan` 为确定性基线，顺着数据流对 14 个控制项逐项取证，产出 `.compliance/COMPLIANCE-REPORT.md`
 - 核心增量：扫描器只能报「有境外端点」，skill 回答「个人信息有没有真的流过去」

@@ -171,6 +171,7 @@ function runScan(args: string[]) {
         ? `\n🔒 策略门禁（${pol.source === 'file' ? '.shellward.json' : '默认'}）：${pol.pass ? '✅ 通过' : '❌ 未通过'}\n`
         : `\n🔒 Policy gate (${pol.source === 'file' ? '.shellward.json' : 'default'}): ${pol.pass ? '✅ pass' : '❌ fail'}\n`)
       for (const v of pol.violations) process.stdout.write(`   - ${v}\n`)
+      for (const w of pol.warnings) process.stdout.write(`   ⚠️  ${w}\n`)
     }
     if (!pol.pass) process.exit(1)
   }

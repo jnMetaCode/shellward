@@ -75,6 +75,27 @@ npx shellward scan
 
 > 检测重点：**境外大模型端点与 SDK 依赖（数据出境——中国独有、英文工具没有的概念）**、硬编码密钥、文件中的中文 PII、`.env` 暴露。扫到境外模型（如 `openai` 依赖）时，**直接给出境内合规替代**（通义千问 / DeepSeek / Kimi / 智谱）及其 OpenAI 兼容 `base_url`——多数迁移只需改一个 `base_url`。
 
+<details>
+<summary><b>境内合规替代表</b>（<code>src/rules/domestic-alternatives.ts</code>，报告里默认推荐前 4 个；欢迎 PR 补充，见 <a href="https://github.com/jnMetaCode/shellward/issues/3">#3</a>）</summary>
+
+| 境内模型 | 厂商 | OpenAI 兼容 `base_url` |
+|---|---|---|
+| 通义千问 Qwen | 阿里云百炼/DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| DeepSeek | 深度求索 | `https://api.deepseek.com` |
+| Kimi | 月之暗面 | `https://api.moonshot.cn/v1` |
+| 智谱 GLM | 智谱 AI | `https://open.bigmodel.cn/api/paas/v4` |
+| 豆包 Doubao | 字节火山方舟 | `https://ark.cn-beijing.volces.com/api/v3` |
+| 文心一言 ERNIE | 百度千帆 | `https://qianfan.baidubce.com/v2` |
+| 腾讯混元 Hunyuan | 腾讯云 | `https://api.hunyuan.cloud.tencent.com/v1` |
+| MiniMax | 稀宇科技 | `https://api.minimaxi.com/v1` |
+| 讯飞星火 Spark | 科大讯飞 | `https://spark-api-open.xf-yun.com/v1` |
+| 阶跃星辰 Step | 阶跃星辰 | `https://api.stepfun.com/v1` |
+| 百川 Baichuan | 百川智能 | `https://api.baichuan-ai.com/v1` |
+| 零一万物 Yi | 零一万物 | `https://api.lingyiwanwu.com/v1` |
+
+`base_url` 为各厂商公开的 OpenAI 兼容端点，可能随官方调整，迁移前以官方文档为准。境外识别覆盖 OpenAI / Anthropic / Gemini / Azure / Bedrock / Cohere / Mistral / Groq / Together / Perplexity / OpenRouter / HuggingFace / xAI / Replicate / AI21 / Fireworks / DeepInfra / Cerebras / Voyage / NVIDIA NIM 的端点，以及 npm / pip / Go 的 SDK 依赖（含 LangChain、LlamaIndex、Vercel AI SDK 适配包），见 `src/rules/overseas-llm.ts`（[#4](https://github.com/jnMetaCode/shellward/issues/4)）。
+</details>
+
 **想在浏览器里看报告？** 在项目目录跑 `npx shellward scan --open` —— 自动扫描并在浏览器打开报告，**无需上传、无弹框、数据不出本机**（最干净）。也可 `npx shellward web --local` 起本地图形界面（粘贴/点选路径，服务端直读）。
 
 更多命令、运行时防护（MCP / 插件）、与英文文档见下方 [English](#english) 章节。
@@ -289,6 +310,27 @@ Or run it directly without the Action: `npx shellward scan --ci`.
 - `maxFindings` — max total findings allowed
 - `allowOverseas` — overseas providers explicitly permitted (exempt from failure)
 
+**Per-path rules**（按路径的规则，[issue #5](https://github.com/jnMetaCode/shellward/issues/5)）— stricter constraints for sensitive directories, checked *in addition to* the global ones:
+
+```json
+{
+  "version": 1,
+  "failOn": ["critical"],
+  "allowOverseas": ["OpenAI"],
+  "rules": [
+    { "path": "agents/**", "failOn": ["overseas"], "allowOverseas": [] },
+    { "path": ["src/payments/**", "*.env"], "failOn": ["secret", "pii"] },
+    { "path": "scripts/", "maxFindings": 5 }
+  ]
+}
+```
+
+- `path` — one pattern or a list, relative to the repo root: `**` any depth, `*` within one directory, `?` one char. A pattern without `/` (e.g. `*.py`) matches at any depth, like `.gitignore`; a pattern without wildcards (e.g. `agents`) matches that file or everything under that directory.
+- `failOn` / `maxFindings` — same meaning as the global fields, counted only over findings in scope.
+- `allowOverseas` — omitted = inherit the global list; set it (even to `[]`) to override for that path. Above, `agents/**` must have **no** overseas calls at all, while OpenAI stays allowed elsewhere.
+
+Unknown fields, misspelled `failOn` values (e.g. `"secrets"`) and a broken JSON file are printed as ⚠️ warnings in CI instead of being silently ignored — a typo can no longer turn the gate into a no-op.
+
 `shellward scan --ci` reads it; without the file it defaults to "fail on any critical". 实现「策略在 Git push 时声明 → 运行时执行」的纵深防御。
 
 ## 8-Layer Defense
@@ -464,7 +506,7 @@ Effectiveness is measured, not asserted. `npm run bench` runs every detector ove
 | MCP tool poisoning | 100% | 100% | 100% |
 | **Compliance scan** (overseas / secret / PII vs hard negatives) | 100% | 100% | 100% |
 
-The compliance scanner has its own gated corpus — `npm run bench:scan` runs the **real `scanProject` pipeline** over 31 labeled cases (17 real risks + 14 hard negatives: domestic endpoints, placeholder keys, doc examples, lock files, invalid checksums). Self-authored corpus, CI-gated against regression.
+The compliance scanner has its own gated corpus — `npm run bench:scan` runs the **real `scanProject` pipeline** over 41 labeled cases (24 real risks + 17 hard negatives: domestic endpoints, placeholder keys, doc examples, lock files, invalid checksums). Self-authored corpus, CI-gated against regression.
 
 83 gated samples (attacks + hard negatives). Zero-width-interleaved and empty-quote (`r''m`) obfuscation are normalized before matching. The corpus also tracks **5 documented bypasses** (leetspeak, base64, non-zh/en languages, shell variable indirection) that regex/heuristics are not expected to catch — listed explicitly and excluded from the gate rather than hidden.
 

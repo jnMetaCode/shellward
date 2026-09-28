@@ -3,7 +3,7 @@
 //
 // 验证：① 出境端点检测 ② 体检引擎评分逻辑 ③ 报告渲染 ④ 控制项映射完整性
 
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, chmodSync } from 'fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, chmodSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { detectOverseasLLM, detectOverseasDeps } from './src/rules/overseas-llm'
@@ -13,7 +13,7 @@ import { renderComplianceReport, renderProjectFindings } from './src/compliance/
 import { scanProject } from './src/compliance/project-scan'
 import { renderHtmlReport } from './src/compliance/html-report'
 import { validateRepoUrl } from './src/web/scan-server'
-import { evaluatePolicy, loadPolicy } from './src/compliance/policy'
+import { evaluatePolicy, loadPolicy, checkPolicy, matchPath } from './src/compliance/policy'
 import { suggestDomestic, DOMESTIC_MODELS } from './src/rules/domestic-alternatives'
 import { COMPLIANCE_CONTROLS } from './src/compliance/regulations'
 import { DEFAULT_CONFIG } from './src/types'
@@ -435,7 +435,120 @@ console.log('\n--- 策略门禁 .shellward.json ---')
     test('有文件 → 读取策略', lp.source === 'file' && lp.policy.maxFindings === 5)
     writeFileSync(join(dir, '.shellward.json'), '{bad json')
     test('坏文件 → 回退默认(不崩溃)', loadPolicy(dir).source === 'default')
+    test('坏文件 → 给出警告(不静默)', loadPolicy(dir).warnings.length === 1)
+
+    // 策略自检：拼错的 failOn / 未知字段 / 过新的版本必须报出来，否则门禁"永远通过"没人发现
+    writeFileSync(join(dir, '.shellward.json'), '{"version":2,"failOn":["secrets"],"failon":["pii"],"rules":[{"failOn":["pii"]},{"path":"a/**","failOn":["oversea"]}]}')
+    const w = loadPolicy(dir).warnings.join('\n')
+    test('警告：failOn 拼错', w.includes('"secrets"'))
+    test('警告：未知字段', w.includes('"failon"'))
+    test('警告：version 过新', w.includes('version=2'))
+    test('警告：规则缺 path', w.includes('rules[0]') && w.includes('path'))
+    test('警告：规则内 failOn 拼错', w.includes('rules[1]') && w.includes('"oversea"'))
+    test('缺 path 的规则被丢弃', loadPolicy(dir).policy.rules?.length === 1)
+    writeFileSync(join(dir, '.shellward.json'), '{"version":1,"failOn":["secret"],"rules":[{"path":"agents/**","failOn":["overseas"]}]}')
+    test('合法策略 → 无警告', loadPolicy(dir).warnings.length === 0)
   } finally { rmSync(dir, { recursive: true, force: true }) }
+}
+
+// === 15. 按路径的策略规则（issue #5）===
+console.log('\n--- 按路径规则 rules[] ---')
+{
+  const at = (file: string, kind: any, sev: any = 'high', provider?: string) => ({ kind, file, line: 3, detail: 'x', severity: sev, provider_en: provider } as any)
+  const scanOf = (findings: any[]) => ({ root: '/x', filesScanned: 1, truncated: false, findings, counts: { overseas: 0, secret: 0, pii: 0, 'env-perm': 0 } } as any)
+
+  // glob 语义
+  test('agents/** 命中子目录文件', matchPath('agents/x/y.ts', 'agents/**'))
+  test('agents/** 不命中 src/agents', !matchPath('src/agents/y.ts', 'agents/**'))
+  test('agents/ (目录写法) 命中', matchPath('agents/y.ts', 'agents/'))
+  test('无通配的目录名命中其下文件', matchPath('agents/y.ts', 'agents'))
+  test('无通配不误命中前缀相同的兄弟目录', !matchPath('agents2/y.ts', 'agents'))
+  test('*.py 命中任意层级', matchPath('a/b/c.py', '*.py') && !matchPath('a/b/c.pyc', '*.py'))
+  test('src/*.ts 不跨目录', matchPath('src/a.ts', 'src/*.ts') && !matchPath('src/x/a.ts', 'src/*.ts'))
+  test('**/config/*.json 任意层级', matchPath('config/a.json', '**/config/*.json') && matchPath('x/y/config/a.json', '**/config/*.json'))
+  test('? 匹配单字符', matchPath('v1/a.ts', 'v?/*.ts') && !matchPath('v10/a.ts', 'v?/*.ts'))
+  test('Windows 分隔符归一', matchPath('agents\\sub\\a.ts', 'agents/**'))
+  test('./ 前缀归一', matchPath('agents/a.ts', './agents/**'))
+  test('正则元字符按字面匹配', matchPath('a+b/(x).ts', 'a+b/(x).ts') && !matchPath('aab/x.ts', 'a+b/(x).ts'))
+  {
+    // .shellward.json 可能被外部 PR 改动：病态模式不能把 CI 卡死（早期正则实现在这里会跑几分钟）
+    const longPath = 'a/'.repeat(100) + 'a'.repeat(200) + 'x'
+    const t0 = Date.now()
+    for (const p of ['**a**a**a**a**a**b', '*a*a*a*a*a*a*a*b', '**/**/**/**/**/**/b', 'a*a*a*a*a*a*a*a*a*a*b']) matchPath(longPath, p)
+    test('病态 glob 不回溯爆炸 (<200ms)', Date.now() - t0 < 200)
+  }
+
+  // issue #5 原始用例：碰 agents/ 的改动必须无境外调用
+  const pol = { rules: [{ path: 'agents/**', failOn: ['overseas'] }] }
+  const ra = evaluatePolicy(scanOf([at('agents/planner.ts', 'overseas', 'high', 'OpenAI')]), pol)
+  test('agents/ 下有境外调用 → 不通过', !ra.pass)
+  test('违规说明带规则路径和位置', ra.violations[0]?.includes('[agents/**]') && ra.violations[0]?.includes('agents/planner.ts:3'))
+  test('agents/ 外的境外调用 → 通过', evaluatePolicy(scanOf([at('src/llm.ts', 'overseas', 'high', 'OpenAI')]), pol).pass)
+  test('agents/ 下只有别的类别 → 通过', evaluatePolicy(scanOf([at('agents/a.ts', 'pii')]), pol).pass)
+
+  // 全局规则与路径规则同时生效
+  const both = { failOn: ['secret'], rules: [{ path: 'agents/**', failOn: ['overseas'] }] }
+  const rb = evaluatePolicy(scanOf([at('src/k.ts', 'secret', 'critical'), at('agents/a.ts', 'overseas', 'high', 'OpenAI')]), both)
+  test('全局 + 路径规则各报一条', !rb.pass && rb.violations.length === 2)
+
+  // allowOverseas：规则内不填继承全局，填了覆盖
+  const inherit = { allowOverseas: ['OpenAI'], rules: [{ path: 'agents/**', failOn: ['overseas'] }] }
+  test('规则继承全局 allowOverseas', evaluatePolicy(scanOf([at('agents/a.ts', 'overseas', 'high', 'OpenAI')]), inherit).pass)
+  const override = { allowOverseas: ['OpenAI'], rules: [{ path: 'agents/**', failOn: ['overseas'], allowOverseas: [] }] }
+  test('规则 allowOverseas:[] 取消豁免', !evaluatePolicy(scanOf([at('agents/a.ts', 'overseas', 'high', 'OpenAI')]), override).pass)
+
+  // 规则内 maxFindings / 多个 path / 严重度
+  const cap = { rules: [{ path: ['agents/**', 'tools/**'], maxFindings: 1 }] }
+  test('多 path 合并计数 → 超上限', !evaluatePolicy(scanOf([at('agents/a.ts', 'pii'), at('tools/b.ts', 'pii'), at('src/c.ts', 'pii')]), cap).pass)
+  test('多 path 范围外不计数', evaluatePolicy(scanOf([at('agents/a.ts', 'pii'), at('src/b.ts', 'pii'), at('src/c.ts', 'pii')]), cap).pass)
+  test('规则内按严重度', !evaluatePolicy(scanOf([at('deploy/x.env', 'secret', 'critical')]), { rules: [{ path: 'deploy', failOn: ['critical'] }] }).pass)
+
+  // 端到端：真实扫描 + 文件策略
+  const dir = mkdtempSync(join(tmpdir(), 'sw-rules-'))
+  try {
+    mkdirSync(join(dir, 'agents'), { recursive: true })
+    mkdirSync(join(dir, 'scripts'), { recursive: true })
+    writeFileSync(join(dir, 'scripts', 'eval.py'), 'BASE="https://api.openai.com/v1"')
+    writeFileSync(join(dir, '.shellward.json'), JSON.stringify({ failOn: [], rules: [{ path: 'agents/**', failOn: ['overseas'] }] }))
+    test('端到端：境外调用只在 scripts/ → 通过', checkPolicy(scanProject(dir), dir).pass)
+    writeFileSync(join(dir, 'agents', 'bot.ts'), 'const u = "https://api.anthropic.com/v1/messages"')
+    const e2e = checkPolicy(scanProject(dir), dir)
+    test('端到端：agents/ 出现境外调用 → 不通过', !e2e.pass && e2e.source === 'file' && e2e.violations.some(v => v.includes('agents/bot.ts')))
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+}
+
+// === 16. 境内替代表 / 境外识别数据（issue #3 / #4）===
+console.log('\n--- 境内替代 & 境外厂商数据 ---')
+{
+  const readme = readFileSync(new URL('./README.md', import.meta.url), 'utf-8')
+  const ids = new Set<string>()
+  for (const m of DOMESTIC_MODELS) {
+    test(`境内模型 ${m.id} 字段完整`, !!(m.id && m.name_zh && m.name_en && m.vendor_zh) && (!m.openaiCompatible || /^https:\/\//.test(m.baseUrl)))
+    test(`README 境内替代表含 ${m.name_zh}`, readme.includes(m.baseUrl))
+    test(`境内端点 ${m.id} 不被误判为境外`, !detectOverseasLLM(m.baseUrl).isOverseas)
+    ids.add(m.id)
+  }
+  test('境内模型 id 不重复', ids.size === DOMESTIC_MODELS.length)
+  test('推荐列表保持前 4 个兼容模型', suggestDomestic('openai').alternatives.map(m => m.id).join(',') === 'qwen,deepseek,kimi,glm')
+  test('Fireworks 视为 OpenAI 兼容(低难度)', suggestDomestic('fireworks').difficulty_zh.startsWith('低'))
+
+  for (const [u, id] of [
+    ['https://api.replicate.com/v1/predictions', 'replicate'],
+    ['https://api.ai21.com/studio/v1', 'ai21'],
+    ['https://api.fireworks.ai/inference/v1', 'fireworks'],
+    ['https://api.deepinfra.com/v1/openai', 'deepinfra'],
+    ['https://api.cerebras.ai/v1', 'cerebras'],
+    ['https://api.voyageai.com/v1/embeddings', 'voyage'],
+    ['https://integrate.api.nvidia.com/v1', 'nvidia-nim'],
+  ] as const) {
+    test(`境外端点 ${id}`, detectOverseasLLM(u).endpointId === id)
+  }
+  const deps = (f: string, c: string) => detectOverseasDeps(f, c).map(d => d.pkg)
+  test('npm @google/genai / @ai-sdk/anthropic', deps('package.json', '{"dependencies":{"@google/genai":"1","@ai-sdk/anthropic":"1"}}').length === 2)
+  test('py voyageai / langchain-groq / llama-index-llms-openai', deps('requirements.txt', 'voyageai\nlangchain-groq==0.1\nllama-index-llms-openai').length === 3)
+  test('go openai-go/v3 剥主版本后缀', deps('go.mod', 'require github.com/openai/openai-go/v3 v3.0.0').includes('github.com/openai/openai-go'))
+  test('go google.golang.org/genai', deps('go.mod', 'require google.golang.org/genai v1.0.0').includes('google.golang.org/genai'))
+  test('go 无关模块不误报', deps('go.mod', 'require github.com/gin-gonic/gin/v2 v2.0.0').length === 0)
 }
 
 // === 总结 ===
