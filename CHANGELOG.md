@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.22] - 2026-09-29
+
 ### Added — 按路径的策略规则（issue #5，承接 #2）
 - `.shellward.json` 新增 `rules[]`：`{ "path": "agents/**", "failOn": ["overseas"] }` 只约束命中路径的发现，与全局规则同时检查；`path` 支持单个或数组，`**` / `*` / `?` 通配，不含 `/` 的模式按 `.gitignore` 语义匹配任意层级
 - 规则内 `allowOverseas` 不填继承全局、填了覆盖（`[]` 可在敏感目录取消豁免）
